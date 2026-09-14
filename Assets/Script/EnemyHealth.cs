@@ -84,7 +84,10 @@ public class EnemyHealth : MonoBehaviour
         Image fillImg = fillObj.AddComponent<Image>();
         fillImg.color = new Color(0.9f, 0.2f, 0.2f);
         RectTransform fillRt = fillObj.GetComponent<RectTransform>();
-        fillRt.sizeDelta = new Vector2(96f, 12f);
+        fillRt.anchorMin = new Vector2(0, 0);
+        fillRt.anchorMax = new Vector2(1, 1);
+        fillRt.sizeDelta = Vector2.zero;
+        fillRt.anchoredPosition = Vector2.zero;
         healthSlider.fillRect = fillRt;
 
         GameObject textObj = new GameObject("NameText");
@@ -119,7 +122,12 @@ public class EnemyHealth : MonoBehaviour
 
         if (healthSlider != null)
         {
-            healthSlider.value = currentHealth / maxHealth;
+            float ratio = maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
+            healthSlider.value = ratio;
+            if (healthSlider.fillRect != null)
+            {
+                healthSlider.fillRect.gameObject.SetActive(ratio > 0f);
+            }
         }
 
         if (SoundManager.Instance != null)

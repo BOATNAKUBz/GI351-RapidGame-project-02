@@ -87,7 +87,7 @@ public class WaveManager : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             float angle = i * Mathf.PI * 2f / count;
-            Vector3 pos = new Vector3(Mathf.Cos(angle) * radius, 0.5f, Mathf.Sin(angle) * radius);
+            Vector3 pos = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
             GameObject sp = new GameObject($"SpawnPoint_{i + 1}");
             sp.transform.SetParent(parentObj.transform);
             sp.transform.position = pos;
@@ -153,13 +153,29 @@ public class WaveManager : MonoBehaviour
 
     Vector3 GetRandomSpawnPosition()
     {
+        Vector3 pos;
         if (spawnPoints != null && spawnPoints.Length > 0)
         {
             Transform sp = spawnPoints[UnityEngine.Random.Range(0, spawnPoints.Length)];
             Vector2 jitter = UnityEngine.Random.insideUnitCircle * 2f;
-            return sp.position + new Vector3(jitter.x, 0, jitter.y);
+            pos = sp.position + new Vector3(jitter.x, 0, jitter.y);
         }
-        return new Vector3(UnityEngine.Random.Range(-15f, 15f), 0.5f, UnityEngine.Random.Range(-15f, 15f));
+        else
+        {
+            pos = new Vector3(UnityEngine.Random.Range(-15f, 15f), 0f, UnityEngine.Random.Range(-15f, 15f));
+        }
+
+        // หาตำแหน่งพื้นผิวด้วย Raycast เพื่อให้วางติดพื้นพอดี
+        if (Physics.Raycast(new Vector3(pos.x, 20f, pos.z), Vector3.down, out RaycastHit hit, 40f, Physics.AllLayers, QueryTriggerInteraction.Ignore))
+        {
+            pos.y = hit.point.y;
+        }
+        else
+        {
+            pos.y = 0f;
+        }
+
+        return pos;
     }
 
     public GameObject SpawnEnemyFromPrefab(GameObject prefab)
@@ -178,6 +194,7 @@ public class WaveManager : MonoBehaviour
 
         EnemyAI ai = enemyObj.GetComponent<EnemyAI>();
         if (ai == null) ai = enemyObj.AddComponent<EnemyAI>();
+        else ai.SnapToGround();
 
         return enemyObj;
     }

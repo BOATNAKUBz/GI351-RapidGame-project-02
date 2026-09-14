@@ -13,6 +13,25 @@ public class ChickenAI : EnemyAI
         if (moveSpeed <= 3.5f) moveSpeed = 6f; // ไก่วิ่งไวเป็นพิเศษ
     }
 
+    protected override void Update()
+    {
+        base.Update();
+
+        if (animator != null)
+        {
+            if (player != null && Vector3.Distance(transform.position, player.position) > stoppingDistance)
+            {
+                animator.SetFloat("Vert", 1f);
+                animator.SetFloat("State", 1f);
+            }
+            else
+            {
+                animator.SetFloat("Vert", 0f);
+                animator.SetFloat("State", 0f);
+            }
+        }
+    }
+
     protected override void OnReachPlayer()
     {
         base.OnReachPlayer();
@@ -21,11 +40,9 @@ public class ChickenAI : EnemyAI
         {
             nextAttackTime = Time.time + attackCooldown;
 
-            // ดึง Animator ของตัวเองมาใช้งานโดยตรง ป้องกัน Error ขีดแดง
-            Animator anim = GetComponent<Animator>();
-            if (anim != null)
+            if (animator != null)
             {
-                anim.SetTrigger("Attack");
+                try { animator.SetTrigger("Attack"); } catch { }
             }
 
             PlayerHealth playerHealth = player.GetComponent<PlayerHealth>() ?? player.GetComponentInParent<PlayerHealth>();
