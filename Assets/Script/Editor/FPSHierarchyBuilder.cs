@@ -415,7 +415,10 @@ public static class FPSHierarchyBuilder
         Image fillImg = fillObj.AddComponent<Image>();
         fillImg.color = new Color(0.2f, 0.85f, 0.3f);
         RectTransform fillRt = fillObj.GetComponent<RectTransform>();
-        fillRt.sizeDelta = new Vector2(290, 22);
+        fillRt.anchorMin = new Vector2(0, 0);
+        fillRt.anchorMax = new Vector2(1, 1);
+        fillRt.sizeDelta = Vector2.zero;
+        fillRt.anchoredPosition = Vector2.zero;
         hpSlider.fillRect = fillRt;
 
         GameObject hpTxtObj = new GameObject("HP_Text");

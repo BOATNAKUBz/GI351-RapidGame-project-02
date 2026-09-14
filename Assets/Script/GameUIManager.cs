@@ -156,6 +156,8 @@ public class GameUIManager : MonoBehaviour
 
     void Start()
     {
+        SetupHpSlider();
+
         // Bind to Player
         var playerHealth = FindAnyObjectByType<PlayerHealth>();
         if (playerHealth != null)
@@ -173,6 +175,23 @@ public class GameUIManager : MonoBehaviour
         {
             gun.OnAmmoChanged += UpdateAmmo;
             UpdateAmmo(gun.currentAmmo, gun.reserveAmmo);
+        }
+    }
+
+    private void SetupHpSlider()
+    {
+        if (hpSlider != null)
+        {
+            hpSlider.minValue = 0f;
+            hpSlider.maxValue = 1f;
+
+            if (hpSlider.fillRect != null)
+            {
+                hpSlider.fillRect.anchorMin = new Vector2(0, 0);
+                hpSlider.fillRect.anchorMax = new Vector2(1, 1);
+                hpSlider.fillRect.sizeDelta = Vector2.zero;
+                hpSlider.fillRect.anchoredPosition = Vector2.zero;
+            }
         }
     }
 
@@ -526,8 +545,19 @@ public class GameUIManager : MonoBehaviour
 
     public void UpdateHealth(float current, float max)
     {
-        if (hpSlider != null) hpSlider.value = current / max;
-        if (hpText != null) hpText.text = $"HP: {Mathf.CeilToInt(current)} / {Mathf.CeilToInt(max)}";
+        float ratio = max > 0f ? Mathf.Clamp01(current / max) : 0f;
+        if (hpSlider != null)
+        {
+            hpSlider.value = ratio;
+            if (hpSlider.fillRect != null)
+            {
+                hpSlider.fillRect.gameObject.SetActive(ratio > 0f);
+            }
+        }
+        if (hpText != null)
+        {
+            hpText.text = $"HP: {Mathf.CeilToInt(Mathf.Max(0f, current))} / {Mathf.CeilToInt(max)}";
+        }
     }
 
     public void UpdateAmmo(int current, int reserve)

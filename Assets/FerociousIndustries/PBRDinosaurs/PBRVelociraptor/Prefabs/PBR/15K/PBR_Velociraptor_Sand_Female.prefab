@@ -2067,7 +2067,7 @@ SkinnedMeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 37db513481604c645a681139c4d22112, type: 2}
+  - {fileID: 6098924145076851180, guid: 0f65eb0400553da4eafb6c938021d0b8, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3775,7 +3775,7 @@ GameObject:
   - component: {fileID: 2723387572160377518}
   m_Layer: 0
   m_Name: PBR_Velociraptor_Sand_Female
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3810,10 +3810,10 @@ Animator:
   m_GameObject: {fileID: 8429019503320660298}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 923da24417bde954e8eb93a36c143958, type: 3}
-  m_Controller: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 5bec384a71ced6848b10b6486ea7141f, type: 2}
   m_CullingMode: 1
   m_UpdateMode: 0
-  m_ApplyRootMotion: 1
+  m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_AnimatePhysics: 0
