@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,7 +30,6 @@ public class EnemyHealth : MonoBehaviour
         currentHealth = maxHealth;
         isDead = false;
 
-        // Cache renderers for damage flash
         renderers = GetComponentsInChildren<Renderer>();
         if (renderers != null && renderers.Length > 0)
         {
@@ -54,7 +52,7 @@ public class EnemyHealth : MonoBehaviour
 
         GameObject canvasObj = new GameObject("HealthBarCanvas");
         canvasObj.transform.SetParent(transform, false);
-        canvasObj.transform.localPosition = new Vector3(0, stats.modelScale * 2.2f + 0.3f, 0);
+        canvasObj.transform.localPosition = new Vector3(0, stats != null ? stats.modelScale * 2.2f + 0.3f : 2f, 0);
 
         Canvas canvas = canvasObj.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.WorldSpace;
@@ -64,7 +62,6 @@ public class EnemyHealth : MonoBehaviour
         rt.sizeDelta = new Vector2(1.6f, 0.35f);
         canvasObj.transform.localScale = Vector3.one * 0.015f;
 
-        // Background
         GameObject bgObj = new GameObject("Background");
         bgObj.transform.SetParent(canvasObj.transform, false);
         Image bgImg = bgObj.AddComponent<Image>();
@@ -72,7 +69,6 @@ public class EnemyHealth : MonoBehaviour
         RectTransform bgRt = bgObj.GetComponent<RectTransform>();
         bgRt.sizeDelta = new Vector2(100f, 16f);
 
-        // Fill Slider
         GameObject sliderObj = new GameObject("HealthSlider");
         sliderObj.transform.SetParent(canvasObj.transform, false);
         healthSlider = sliderObj.AddComponent<Slider>();
@@ -91,13 +87,12 @@ public class EnemyHealth : MonoBehaviour
         fillRt.sizeDelta = new Vector2(96f, 12f);
         healthSlider.fillRect = fillRt;
 
-        // Label
         GameObject textObj = new GameObject("NameText");
         textObj.transform.SetParent(canvasObj.transform, false);
         textObj.transform.localPosition = new Vector3(0, 18f, 0);
         healthText = textObj.AddComponent<Text>();
         healthText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        healthText.text = stats.displayName;
+        healthText.text = stats != null ? stats.displayName : "Enemy";
         healthText.fontSize = 14;
         healthText.alignment = TextAnchor.MiddleCenter;
         healthText.color = Color.white;
@@ -173,16 +168,14 @@ public class EnemyHealth : MonoBehaviour
             SoundManager.Instance.PlayEnemyDeath();
         }
 
-        // Drop loot
-        LootDrop.SpawnLoot(transform.position + Vector3.up * 0.5f, stats != null ? stats.dropChance : 0.5f);
+        // ดรอปไอเทมตามตั้งค่าใน EnemyAI ของแต่ละตัว
+        GetComponent<EnemyAI>()?.DropLoot();
 
-        // Notify Wave Manager
         if (WaveManager.Instance != null)
         {
             WaveManager.Instance.OnEnemyKilled(gameObject);
         }
 
-        // Disable colliders and AI
         Collider[] cols = GetComponentsInChildren<Collider>();
         foreach (var c in cols) c.enabled = false;
 

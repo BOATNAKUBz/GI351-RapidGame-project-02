@@ -163,6 +163,8 @@ public class GameUIManager : MonoBehaviour
             playerHealth.OnHealthChanged += UpdateHealth;
             playerHealth.OnDamaged += (amt) => FlashDamageVignette();
             playerHealth.OnDied += ShowGameOverScreen;
+
+            // เพิ่มบรรทัดนี้ เพื่อบังคับอัปเดตค่าเริ่มต้นเข้า UI ทันทีที่เริ่มเกม
             UpdateHealth(playerHealth.currentHealth, playerHealth.maxHealth);
         }
 
@@ -265,14 +267,31 @@ public class GameUIManager : MonoBehaviour
         hpSlider.value = 1f;
         RectTransform sliderRt = hpSliderObj.GetComponent<RectTransform>();
         sliderRt.sizeDelta = new Vector2(290, 22);
-        sliderRt.anchoredPosition = new Vector2(150, 25);
 
+        // ตั้ง Pivot เป็นซ้ายสุด (0) และจัดตำแหน่งชิดซ้ายของ Panel
+        sliderRt.pivot = new Vector2(0, 0.5f);
+        sliderRt.anchoredPosition = new Vector2(5, 25);
+        
+        // Fill Area
+        GameObject fillAreaObj = new GameObject("Fill Area");
+        fillAreaObj.transform.SetParent(hpSliderObj.transform, false);
+        RectTransform fillAreaRt = fillAreaObj.AddComponent<RectTransform>();
+        fillAreaRt.anchorMin = new Vector2(0, 0);
+        fillAreaRt.anchorMax = new Vector2(1, 1);
+        fillAreaRt.sizeDelta = Vector2.zero;
+        fillAreaRt.anchoredPosition = Vector2.zero;
+
+        // Fill (หลอดเลือดเขียว)
         GameObject fillObj = new GameObject("Fill");
-        fillObj.transform.SetParent(hpSliderObj.transform, false);
+        fillObj.transform.SetParent(fillAreaObj.transform, false);
         Image fillImg = fillObj.AddComponent<Image>();
         fillImg.color = new Color(0.2f, 0.85f, 0.3f);
         RectTransform fillRt = fillObj.GetComponent<RectTransform>();
-        fillRt.sizeDelta = new Vector2(290, 22);
+        fillRt.anchorMin = new Vector2(0, 0);
+        fillRt.anchorMax = new Vector2(1, 1);
+        fillRt.sizeDelta = Vector2.zero;
+        fillRt.anchoredPosition = Vector2.zero;
+
         hpSlider.fillRect = fillRt;
 
         // HP Text

@@ -1,196 +1,75 @@
-using System.Collections;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
 {
+    [Header("Loot Settings")]
+    public GameObject dropItemPrefab;
+    [Range(0f, 1f)]
+    public float dropChance = 0.5f;
     public EnemyStats stats;
 
-    private Transform playerTransform;
-    private PlayerHealth playerHealth;
-    private NavMeshAgent agent;
-    private float nextAttackTime = 0f;
-    private bool isAttacking = false;
-    private Vector3 initialScale;
+    [Header("Movement & Target")]
+    public Transform player;
+    public float moveSpeed = 3.5f;
+    public float stoppingDistance = 1.5f;
 
-    // เพิ่มตัวแปร Animator
-    private Animator anim;
+    [Header("Attack Settings")]
+    public float attackRange = 2f;
 
-    void Awake()
+    protected Animator animator;
+
+    protected virtual void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
-        if (agent != null && !agent.isOnNavMesh)
+        // 1. หาตำแหน่ง Player อัตโนมัติจาก Tag
+        if (player == null)
         {
-            agent.enabled = false;
-        }
-        initialScale = transform.localScale;
-
-        // ดึง Animator ที่ติดอยู่กับตัว หรือโมเดลลูก
-        anim = GetComponentInChildren<Animator>();
-    }
-
-    void Start()
-    {
-        FindPlayer();
-    }
-
-    public void Initialize(EnemyStats enemyStats)
-    {
-        stats = enemyStats;
-
-        if (agent != null)
-        {
-            agent.speed = stats.moveSpeed;
-            agent.stoppingDistance = stats.attackRange * 0.85f;
-        }
-
-        FindPlayer();
-    }
-
-    void FindPlayer()
-    {
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj == null)
-        {
-            var pCtrl = FindAnyObjectByType<PlayerController>();
-            if (pCtrl != null) playerObj = pCtrl.gameObject;
-        }
-
-        if (playerObj != null)
-        {
-            playerTransform = playerObj.transform;
-            playerHealth = playerObj.GetComponent<PlayerHealth>();
-        }
-    }
-
-    void Update()
-    {
-        if (stats == null) return;
-        if (playerTransform == null || (playerHealth != null && playerHealth.isDead))
-        {
-            UpdateWalkAnimation(false);
-            return;
-        }
-
-        float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-
-        if (distanceToPlayer <= stats.attackRange)
-        {
-            // Within attack range: Face player and attack
-            Vector3 lookPos = playerTransform.position;
-            lookPos.y = transform.position.y;
-            transform.LookAt(lookPos);
-
-            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
             {
-                agent.isStopped = true;
-            }
-
-            UpdateWalkAnimation(false);
-
-            if (Time.time >= nextAttackTime && !isAttacking)
-            {
-                StartCoroutine(AttackRoutine());
+                player = playerObj.transform;
             }
         }
-        else
+
+        // 2. ดึง Component Animator (ถ้ามี)
+        animator = GetComponent<Animator>();
+    }
+
+    protected virtual void Update()
+    {
+        if (player == null) return;
+
+        // คำนวณระยะห่างระหว่าง Enemy กับ Player
+        float distance = Vector3.Distance(transform.position, player.position);
+
+        // ถ้ายังอยู่นอกระยะโจมตี ให้เดินเข้าไปหา
+        if (distance > stoppingDistance)
         {
-            // Pursue player
-            if (!isAttacking)
-            {
-                MoveTowardsPlayer();
-                UpdateWalkAnimation(true);
-            }
+            // หันหน้าเข้าหา Player (ล็อคแกน Y ไม่ให้ตัวเอียง)
+            Vector3 targetPosition = new Vector3(player.position.x, transform.position.y, player.position.z);
+            transform.LookAt(targetPosition);
+
+            // เคลื่อนที่พุ่งตรงเข้าหาผู้เล่น
+            transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+        }
+
+        // ถ้าเข้าไปถึงระยะโจมตีแล้ว
+        if (distance <= attackRange)
+        {
+            OnReachPlayer();
         }
     }
 
-    void MoveTowardsPlayer()
+    protected virtual void OnReachPlayer()
     {
-        if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
-        {
-            agent.isStopped = false;
-            agent.SetDestination(playerTransform.position);
-        }
-        else
-        {
-            // Direct movement fallback
-            Vector3 targetPos = playerTransform.position;
-            Vector3 dir = (targetPos - transform.position);
-            dir.y = 0;
-
-            if (dir.sqrMagnitude > 0.01f)
-            {
-                Quaternion targetRot = Quaternion.LookRotation(dir.normalized);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 10f * Time.deltaTime);
-                Vector3 newPos = transform.position + transform.forward * stats.moveSpeed * Time.deltaTime;
-                newPos.y = 0.5f;
-                transform.position = newPos;
-            }
-        }
+        // โค้ดโจมตีพื้นฐาน (สามารถเขียนทับในคลาสลูกได้ เช่น ExploderAI)
     }
 
-    void UpdateWalkAnimation(bool isMoving)
+    // ฟังก์ชัน DropLoot
+    public virtual void DropLoot()
     {
-        if (anim != null)
+        if (dropItemPrefab != null && Random.value <= dropChance)
         {
-            // ถ้ามี Animator ให้ส่งค่าความเร็ว/สถานะเดินไปที่ Animator Controller (ปรับชื่อ Parameter ตามที่คุณตั้งไว้ เช่น "IsWalking" หรือ "Speed")
-            anim.SetBool("IsWalking", isMoving);
+            Instantiate(dropItemPrefab, transform.position + Vector3.up * 0.5f, Quaternion.identity);
         }
-        else if (isMoving)
-        {
-            // ถ้าไม่มี Animator ให้ใช้ procedural walking bob เดิม
-            float bob = Mathf.Sin(Time.time * stats.moveSpeed * 2.5f) * 0.05f;
-            float roll = Mathf.Cos(Time.time * stats.moveSpeed * 2f) * 2.5f;
-
-            Transform visual = transform.Find("Visual_" + stats.type);
-            if (visual != null)
-            {
-                visual.localPosition = new Vector3(0, Mathf.Abs(bob), 0);
-                visual.localRotation = Quaternion.Euler(0, 0, roll);
-            }
-        }
-    }
-
-    IEnumerator AttackRoutine()
-    {
-        isAttacking = true;
-        nextAttackTime = Time.time + stats.attackCooldown;
-
-        if (anim != null)
-        {
-            // สั่งเล่น Animation ท่าโจมตี (ตั้งชื่อ Parameter ใน Animator Controller เป็น Trigger ชื่อ "Attack")
-            anim.SetTrigger("Attack");
-        }
-
-        Transform visual = transform.Find("Visual_" + stats.type);
-        Vector3 originalPos = visual != null ? visual.localPosition : Vector3.zero;
-
-        // ถ้าไม่มี Animator ค่อยใช้ Code โยกตัว (Windup & Lunge)
-        if (anim == null && visual != null)
-        {
-            visual.localPosition = originalPos - Vector3.forward * 0.15f;
-        }
-
-        yield return new WaitForSeconds(0.12f);
-
-        if (anim == null && visual != null)
-        {
-            visual.localPosition = originalPos + Vector3.forward * 0.35f;
-        }
-
-        // Deal damage
-        if (playerHealth != null && Vector3.Distance(transform.position, playerTransform.position) <= stats.attackRange * 1.35f)
-        {
-            playerHealth.TakeDamage(stats.damage);
-        }
-
-        yield return new WaitForSeconds(0.15f);
-
-        if (anim == null && visual != null)
-        {
-            visual.localPosition = originalPos;
-        }
-
-        isAttacking = false;
     }
 }

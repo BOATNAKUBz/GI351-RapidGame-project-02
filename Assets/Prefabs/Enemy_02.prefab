@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 9011913401237318231}
   - component: {fileID: 3695851459206890561}
   - component: {fileID: 6967485886239666860}
-  - component: {fileID: 7718358838831964054}
+  - component: {fileID: 5031266546808483655}
   - component: {fileID: 1050107101679345716}
   m_Layer: 0
   m_Name: Enemy_02
@@ -66,7 +66,7 @@ NavMeshAgent:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1669965196625898662}
-  m_Enabled: 1
+  m_Enabled: 0
   m_AgentTypeID: 0
   m_Radius: 0.35
   m_Speed: 7.5
@@ -81,7 +81,7 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &7718358838831964054
+--- !u!114 &5031266546808483655
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -90,21 +90,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 1669965196625898662}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da638c481837c3549add370e211ca122, type: 3}
+  m_Script: {fileID: 11500000, guid: ea8d366930bb7344bb99ef253598e48c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
+  m_EditorClassIdentifier: Assembly-CSharp::ChickenAI
+  dropItemPrefab: {fileID: 2122155298024884394, guid: 606416a03f1615a42a8244beec668fb5, type: 3}
+  dropChance: 0.309
   stats:
     type: 0
-    displayName: Swarmer
-    maxHealth: 35
-    moveSpeed: 7.5
-    damage: 6
-    attackCooldown: 0.7
-    attackRange: 1.3
-    modelScale: 0.7
-    primaryColor: {r: 0.9, g: 0.25, b: 0.1, a: 1}
-    emissionColor: {r: 2, g: 0.8, b: 0.2, a: 2}
-    dropChance: 0.35
+    displayName: 
+    maxHealth: 0
+    moveSpeed: 0
+    damage: 0
+    attackCooldown: 0
+    attackRange: 0
+    modelScale: 0
+    primaryColor: {r: 0, g: 0, b: 0, a: 0}
+    emissionColor: {r: 0, g: 0, b: 0, a: 0}
+    dropChance: 0
+  player: {fileID: 0}
+  moveSpeed: 3.5
+  stoppingDistance: 1.5
+  attackRange: 2
+  attackDamage: 5
+  attackCooldown: 0.5
 --- !u!114 &1050107101679345716
 MonoBehaviour:
   m_ObjectHideFlags: 0

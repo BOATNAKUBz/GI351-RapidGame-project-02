@@ -387,7 +387,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 150, y: 25}
+  m_AnchoredPosition: {x: -2.5, y: 25}
   m_SizeDelta: {x: 200, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &205717141
@@ -1187,17 +1187,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
   wavesConfigList:
-  - waveTitle: asdsadas
+  - waveTitle: 1
     enemies:
     - enemyPrefab: {fileID: 1669965196625898662, guid: 398bc1741d2b5124c80d94af5af54589, type: 3}
+      count: 10
+    spawnInterval: 1
+  - waveTitle: 2
+    enemies:
+    - enemyPrefab: {fileID: 1669965196625898662, guid: 398bc1741d2b5124c80d94af5af54589, type: 3}
+      count: 10
+    - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
       count: 5
+    spawnInterval: 2
+  - waveTitle: 3
+    enemies:
     - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
       count: 3
-    spawnInterval: 2
-  - waveTitle: asdasd211
-    enemies:
+    - enemyPrefab: {fileID: 1669965196625898662, guid: 398bc1741d2b5124c80d94af5af54589, type: 3}
+      count: 10
     - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
-      count: 1
+      count: 2
     spawnInterval: 2
   spawnPoints:
   - {fileID: 1301590116}
@@ -4028,14 +4037,14 @@ RectTransform:
   m_GameObject: {fileID: 1323812395}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.95, y: 1.4466506, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1430916867}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 150, y: 25}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 160, y: 50.4}
   m_SizeDelta: {x: 300, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1323812397
@@ -4435,18 +4444,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1426069441}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: 0, y: 0.008726558, z: 0, w: 0.999962}
+  m_LocalPosition: {x: 0, y: 0, z: 3.5}
+  m_LocalScale: {x: 0.5, y: 1, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1881481921}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 1, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 290, y: 22}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -140.00012, y: 0}
+  m_SizeDelta: {x: 288.8, y: 22}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1426069443
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4461,7 +4470,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.2, g: 0.85, b: 0.3, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
