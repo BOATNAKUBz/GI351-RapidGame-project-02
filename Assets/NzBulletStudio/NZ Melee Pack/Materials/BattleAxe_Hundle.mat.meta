@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a199fcd009d6fb64e983a25e33e440d4
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267385
+  packageName: 'Weapons NZ Melee : Battle Axe (HDRP Support)'
+  packageVersion: 1.0
+  assetPath: Assets/NzBulletStudio/NZ Melee Pack/Materials/BattleAxe_Hundle.mat
+  uploadId: 618663

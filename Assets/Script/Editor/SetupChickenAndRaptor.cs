@@ -3,18 +3,8 @@ using UnityEngine;
 using UnityEngine.AI;
 using System.IO;
 
-[InitializeOnLoad]
 public static class SetupChickenAndRaptor
 {
-    static SetupChickenAndRaptor()
-    {
-        EditorApplication.delayCall += () =>
-        {
-            FixAllPurpleMaterials();
-            SetupEnemies();
-        };
-    }
-
     [MenuItem("Tools/FPS Prototype/Fix Purple Shaders & Setup Chicken and Raptor")]
     public static void ExecuteAll()
     {
@@ -255,14 +245,21 @@ public static class SetupChickenAndRaptor
 
     public static void UpdateWaveManagerWithNewEnemies()
     {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+
         GameObject chickenPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Enemy_Chicken.prefab");
         GameObject raptorPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Enemy_Raptor.prefab");
 
         if (chickenPrefab == null && raptorPrefab == null) return;
 
-        // Open and update SampleScene
+        // Open and update SampleScene safely
         string scenePath = "Assets/Scenes/SampleScene.unity";
-        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+        var activeScene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+        var scene = activeScene;
+        if (activeScene.path != scenePath)
+        {
+            scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+        }
 
         WaveManager wm = Object.FindAnyObjectByType<WaveManager>();
         if (wm != null)

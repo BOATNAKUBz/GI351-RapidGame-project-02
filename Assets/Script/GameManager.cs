@@ -218,12 +218,22 @@ public class GameManager : MonoBehaviour
 
         pController.cameraTransform = cam.transform;
 
-        // Ensure FPSGun is on Camera
-        var gun = cam.GetComponent<FPSGun>();
-        if (gun == null)
+        // Check weapon system: Prefer PlayerInventory (new 3-slot system)
+        var inv = cam.GetComponent<PlayerInventory>();
+        if (inv != null)
         {
-            gun = cam.gameObject.AddComponent<FPSGun>();
-            gun.playerCamera = cam;
+            var oldGun = cam.GetComponent<FPSGun>();
+            if (oldGun != null) Destroy(oldGun);
+        }
+        else
+        {
+            // Legacy FPSGun fallback only if no inventory
+            var gun = cam.GetComponent<FPSGun>();
+            if (gun == null)
+            {
+                gun = cam.gameObject.AddComponent<FPSGun>();
+                gun.playerCamera = cam;
+            }
         }
     }
 }

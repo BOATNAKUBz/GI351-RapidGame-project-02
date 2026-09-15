@@ -15,6 +15,9 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Attack Settings")]
     public float attackRange = 2f;
+    public float attackDamage = 15f;
+    public float attackCooldown = 1.0f;
+    protected float nextAttackTime = 0f;
 
     [Header("Ground Alignment")]
     public bool snapToGround = true;
@@ -54,7 +57,12 @@ public class EnemyAI : MonoBehaviour
 
     protected virtual void Update()
     {
-        if (player == null) return;
+        if (player == null)
+        {
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null) player = playerObj.transform;
+            else return;
+        }
 
         // คำนวณระยะห่างระหว่าง Enemy กับ Player
         float distance = Vector3.Distance(transform.position, player.position);
@@ -68,6 +76,12 @@ public class EnemyAI : MonoBehaviour
 
             // เคลื่อนที่พุ่งตรงเข้าหาผู้เล่น
             transform.position = Vector3.MoveTowards(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+        }
+        else
+        {
+            // หันหน้าเข้าหาผู้เล่นเมื่ออยู่ในระยะ
+            Vector3 targetPosition = new Vector3(player.position.x, transform.position.y, player.position.z);
+            transform.LookAt(targetPosition);
         }
 
         // ยึดติดพื้นเสมอ
@@ -138,7 +152,24 @@ public class EnemyAI : MonoBehaviour
 
     protected virtual void OnReachPlayer()
     {
-        // โค้ดโจมตีพื้นฐาน (สามารถเขียนทับในคลาสลูกได้ เช่น ExploderAI)
+        if (Time.time >= nextAttackTime)
+        {
+            nextAttackTime = Time.time + attackCooldown;
+
+            if (animator != null)
+            {
+                try { animator.SetTrigger("Attack"); } catch { }
+            }
+
+            if (player != null)
+            {
+                PlayerHealth playerHealth = player.GetComponent<PlayerHealth>() ?? player.GetComponentInParent<PlayerHealth>();
+                if (playerHealth != null)
+                {
+                    playerHealth.TakeDamage(attackDamage);
+                }
+            }
+        }
     }
 
     // ฟังก์ชัน DropLoot

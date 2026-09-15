@@ -17,6 +17,8 @@ public class GameUIManager : MonoBehaviour
     public Text notifText;
     public Image hitMarker;
     public Image damageVignette;
+    public Text interactPromptText;
+    public Text weaponSlotsText;
     public GameObject gameOverPanel;
     public GameObject victoryPanel;
 
@@ -106,6 +108,16 @@ public class GameUIManager : MonoBehaviour
                 var vp = t.Find("VictoryPanel");
                 if (vp != null) victoryPanel = vp.gameObject;
             }
+            if (interactPromptText == null)
+            {
+                var ip = t.Find("InteractPrompt");
+                if (ip != null) interactPromptText = ip.GetComponent<Text>();
+            }
+            if (weaponSlotsText == null)
+            {
+                var ws = t.Find("WeaponSlotsPanel");
+                if (ws != null) weaponSlotsText = ws.GetComponent<Text>();
+            }
 
             return true;
         }
@@ -166,10 +178,26 @@ public class GameUIManager : MonoBehaviour
             playerHealth.OnDamaged += (amt) => FlashDamageVignette();
             playerHealth.OnDied += ShowGameOverScreen;
 
-            // เพิ่มบรรทัดนี้ เพื่อบังคับอัปเดตค่าเริ่มต้นเข้า UI ทันทีที่เริ่มเกม
             UpdateHealth(playerHealth.currentHealth, playerHealth.maxHealth);
         }
 
+        // Bind to Player Inventory (New 3-slot weapon system)
+        if (PlayerInventory.Instance != null)
+        {
+            PlayerInventory.Instance.OnSlotsChanged += UpdateWeaponSlots;
+            PlayerInventory.Instance.OnWeaponSwitched += (idx, weapon) =>
+            {
+                if (weapon != null)
+                {
+                    weapon.OnAmmoChanged -= UpdateAmmo;
+                    weapon.OnAmmoChanged += UpdateAmmo;
+                    UpdateAmmo(weapon.currentAmmo, weapon.reserveAmmo);
+                }
+            };
+            UpdateWeaponSlots(PlayerInventory.Instance.slots, PlayerInventory.Instance.activeSlotIndex);
+        }
+
+        // Legacy gun fallback if present
         var gun = FindAnyObjectByType<FPSGun>();
         if (gun != null)
         {
@@ -180,18 +208,14 @@ public class GameUIManager : MonoBehaviour
 
     private void SetupHpSlider()
     {
+        // NOTE: ผู้เล่นสามารถปรับแต่งตำแหน่ง ขนาด สี และ Layout ของ HP Bar ใน Canvas ได้อิสระตามต้องการ
+        // สคริปต์จะไม่ไปเขียนทับ RectTransform / Anchors / Pivot ของ Slider
         if (hpSlider != null)
         {
             hpSlider.minValue = 0f;
             hpSlider.maxValue = 1f;
-
-            if (hpSlider.fillRect != null)
-            {
-                hpSlider.fillRect.anchorMin = new Vector2(0, 0);
-                hpSlider.fillRect.anchorMax = new Vector2(1, 1);
-                hpSlider.fillRect.sizeDelta = Vector2.zero;
-                hpSlider.fillRect.anchoredPosition = Vector2.zero;
-            }
+            hpSlider.direction = Slider.Direction.LeftToRight;
+            hpSlider.value = 1f;
         }
     }
 
@@ -285,11 +309,9 @@ public class GameUIManager : MonoBehaviour
         hpSlider.maxValue = 1f;
         hpSlider.value = 1f;
         RectTransform sliderRt = hpSliderObj.GetComponent<RectTransform>();
-        sliderRt.sizeDelta = new Vector2(290, 22);
-
-        // ตั้ง Pivot เป็นซ้ายสุด (0) และจัดตำแหน่งชิดซ้ายของ Panel
-        sliderRt.pivot = new Vector2(0, 0.5f);
-        sliderRt.anchoredPosition = new Vector2(5, 25);
+        sliderRt.sizeDelta = new Vector2(300, 30);
+        sliderRt.pivot = new Vector2(0.5f, 0.5f);
+        sliderRt.anchoredPosition = new Vector2(150, 25);
         
         // Fill Area
         GameObject fillAreaObj = new GameObject("Fill Area");
@@ -545,24 +567,162 @@ public class GameUIManager : MonoBehaviour
 
     public void UpdateHealth(float current, float max)
     {
-        float ratio = max > 0f ? Mathf.Clamp01(current / max) : 0f;
+        float clampedCurrent = Mathf.Clamp(current, 0f, max);
+        float ratio = max > 0f ? Mathf.Clamp01(clampedCurrent / max) : 0f;
+
         if (hpSlider != null)
         {
             hpSlider.value = ratio;
             if (hpSlider.fillRect != null)
             {
-                hpSlider.fillRect.gameObject.SetActive(ratio > 0f);
+                // Force fill rect to accurately span from 0 to ratio width
+                hpSlider.fillRect.anchorMin = new Vector2(0, 0);
+                hpSlider.fillRect.anchorMax = new Vector2(ratio, 1);
+                hpSlider.fillRect.pivot = new Vector2(0, 0.5f);
+                hpSlider.fillRect.sizeDelta = Vector2.zero;
+                hpSlider.fillRect.anchoredPosition = Vector2.zero;
+                hpSlider.fillRect.gameObject.SetActive(ratio > 0.0001f);
+
+                Image fillImage = hpSlider.fillRect.GetComponent<Image>();
+                if (fillImage != null)
+                {
+                    if (ratio > 0.5f)
+                    {
+                        fillImage.color = Color.Lerp(new Color(1f, 0.82f, 0.15f), new Color(0.2f, 0.88f, 0.35f), (ratio - 0.5f) * 2f);
+                    }
+                    else
+                    {
+                        fillImage.color = Color.Lerp(new Color(0.92f, 0.18f, 0.18f), new Color(1f, 0.82f, 0.15f), ratio * 2f);
+                    }
+                }
             }
         }
+
         if (hpText != null)
         {
-            hpText.text = $"HP: {Mathf.CeilToInt(Mathf.Max(0f, current))} / {Mathf.CeilToInt(max)}";
+            hpText.text = $"HP: {Mathf.CeilToInt(clampedCurrent)} / {Mathf.CeilToInt(max)}";
         }
     }
 
     public void UpdateAmmo(int current, int reserve)
     {
-        if (ammoText != null) ammoText.text = $"AMMO: {current} / {reserve}";
+        FPSWeapon active = PlayerInventory.Instance != null ? PlayerInventory.Instance.GetActiveWeapon() : null;
+        if (ammoText != null)
+        {
+            ammoText.verticalOverflow = VerticalWrapMode.Overflow;
+            ammoText.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            if (active != null && (active.isMelee || active.weaponType == WeaponType.Axe))
+            {
+                ammoText.text = "MELEE";
+            }
+            else
+            {
+                ammoText.text = $"{current} / {reserve}";
+            }
+        }
+    }
+
+    public void ShowInteractPrompt(string message)
+    {
+        if (interactPromptText == null) CreateInteractPromptUI();
+        if (interactPromptText != null)
+        {
+            interactPromptText.text = message;
+            interactPromptText.gameObject.SetActive(true);
+        }
+    }
+
+    public void HideInteractPrompt()
+    {
+        if (interactPromptText != null)
+        {
+            interactPromptText.gameObject.SetActive(false);
+        }
+    }
+
+    public void ShowPickupBanner(string message)
+    {
+        ShowNotification(message);
+    }
+
+    public void UpdateWeaponSlots(FPSWeapon[] slots, int activeIndex)
+    {
+        if (weaponSlotsText == null) CreateWeaponSlotsUI();
+        if (weaponSlotsText != null && slots != null)
+        {
+            string text = "";
+            for (int i = 0; i < slots.Length; i++)
+            {
+                int slotNum = i + 1;
+                string wName = (slots[i] != null && slots[i].isUnlocked) ? slots[i].weaponName : "Empty";
+                if (i == activeIndex)
+                {
+                    text += $"<b><color=#FFD700>[{slotNum}: {wName}]</color></b>   ";
+                }
+                else if (slots[i] != null && slots[i].isUnlocked)
+                {
+                    text += $"<color=#E0E0E0>[{slotNum}: {wName}]</color>   ";
+                }
+                else
+                {
+                    text += $"<color=#666666>[{slotNum}: ---]</color>   ";
+                }
+            }
+            weaponSlotsText.text = text.TrimEnd();
+        }
+
+        var active = PlayerInventory.Instance != null ? PlayerInventory.Instance.GetActiveWeapon() : null;
+        if (active != null)
+        {
+            UpdateAmmo(active.currentAmmo, active.reserveAmmo);
+        }
+    }
+
+    private void CreateInteractPromptUI()
+    {
+        if (hudCanvas == null) return;
+        GameObject ipObj = new GameObject("InteractPrompt");
+        ipObj.transform.SetParent(hudCanvas.transform, false);
+        RectTransform rt = ipObj.AddComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.anchoredPosition = new Vector2(0, -90);
+        rt.sizeDelta = new Vector2(500, 50);
+
+        interactPromptText = ipObj.AddComponent<Text>();
+        interactPromptText.font = defaultFont != null ? defaultFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        interactPromptText.fontSize = 26;
+        interactPromptText.fontStyle = FontStyle.Bold;
+        interactPromptText.alignment = TextAnchor.MiddleCenter;
+        interactPromptText.color = new Color(1f, 0.9f, 0.2f);
+
+        // Subtle outline
+        Outline outline = ipObj.AddComponent<Outline>();
+        outline.effectColor = new Color(0, 0, 0, 0.8f);
+        outline.effectDistance = new Vector2(1.5f, -1.5f);
+
+        ipObj.SetActive(false);
+    }
+
+    private void CreateWeaponSlotsUI()
+    {
+        if (hudCanvas == null) return;
+        GameObject wsObj = new GameObject("WeaponSlotsPanel");
+        wsObj.transform.SetParent(hudCanvas.transform, false);
+        RectTransform rt = wsObj.AddComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(1, 0);
+        rt.anchoredPosition = new Vector2(-40, 110);
+        rt.sizeDelta = new Vector2(400, 40);
+
+        weaponSlotsText = wsObj.AddComponent<Text>();
+        weaponSlotsText.font = defaultFont != null ? defaultFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        weaponSlotsText.fontSize = 20;
+        weaponSlotsText.alignment = TextAnchor.MiddleRight;
+        weaponSlotsText.color = Color.white;
+
+        Outline outline = wsObj.AddComponent<Outline>();
+        outline.effectColor = new Color(0, 0, 0, 0.8f);
+        outline.effectDistance = new Vector2(1f, -1f);
     }
 
     public void UpdateWaveInfo(int currentWave, int totalWaves, int enemiesRemaining)

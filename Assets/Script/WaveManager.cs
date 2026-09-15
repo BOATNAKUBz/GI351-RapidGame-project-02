@@ -265,6 +265,19 @@ public class WaveManager : MonoBehaviour
         var playerHealth = FindAnyObjectByType<PlayerHealth>();
         if (playerHealth != null) playerHealth.ResetHealth();
 
+        if (PlayerInventory.Instance != null && PlayerInventory.Instance.slots != null)
+        {
+            foreach (var w in PlayerInventory.Instance.slots)
+            {
+                if (w != null && !w.isMelee)
+                {
+                    w.currentAmmo = w.magazineSize;
+                    w.reserveAmmo = 36;
+                    w.NotifyAmmo();
+                }
+            }
+        }
+
         var gun = FindAnyObjectByType<FPSGun>();
         if (gun != null)
         {

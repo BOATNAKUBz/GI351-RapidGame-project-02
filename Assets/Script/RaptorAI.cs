@@ -12,8 +12,6 @@ public class RaptorAI : EnemyAI
     public float dashRange = 6f;          // ระยะที่เริ่มพุ่งใส่ผู้เล่น
     public float dashSpeed = 14f;         // ความเร็วตอนพุ่ง
     public float dashCooldown = 4f;       // คูลดาวน์สกิลพุ่ง (วินาที)
-    public float attackDamage = 30f;      // ดาเมจเมื่อพุ่งชนโดน
-
     private bool isDashing = false;
     private float nextDashTime = 0f;
     private NavMeshAgent agent;
@@ -21,6 +19,8 @@ public class RaptorAI : EnemyAI
     protected override void Start()
     {
         base.Start();
+        attackDamage = 30f;
+        attackCooldown = 0.8f;
         if (moveSpeed <= 3.5f) moveSpeed = 5.5f;
 
         agent = GetComponent<NavMeshAgent>();

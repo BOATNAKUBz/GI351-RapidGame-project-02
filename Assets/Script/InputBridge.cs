@@ -75,6 +75,60 @@ public static class InputBridge
         try { return Input.GetButton("Fire1") || Input.GetMouseButton(0); } catch { return false; }
     }
 
+    public static bool GetFireDown()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var mouse = Mouse.current;
+        if (mouse != null) return mouse.leftButton.wasPressedThisFrame;
+#endif
+        try { return Input.GetButtonDown("Fire1") || Input.GetMouseButtonDown(0); } catch { return false; }
+    }
+
+    public static bool GetInteractDown()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = Keyboard.current;
+        if (kb != null) return kb.eKey.wasPressedThisFrame;
+#endif
+        try { return Input.GetKeyDown(KeyCode.E); } catch { return false; }
+    }
+
+    public static bool GetSlot1Down()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = Keyboard.current;
+        if (kb != null) return kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame;
+#endif
+        try { return Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1); } catch { return false; }
+    }
+
+    public static bool GetSlot2Down()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = Keyboard.current;
+        if (kb != null) return kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame;
+#endif
+        try { return Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2); } catch { return false; }
+    }
+
+    public static bool GetSlot3Down()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = Keyboard.current;
+        if (kb != null) return kb.digit3Key.wasPressedThisFrame || kb.numpad3Key.wasPressedThisFrame;
+#endif
+        try { return Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3); } catch { return false; }
+    }
+
+    public static float GetScrollDelta()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var mouse = Mouse.current;
+        if (mouse != null) return mouse.scroll.ReadValue().y;
+#endif
+        try { return Input.GetAxis("Mouse ScrollWheel"); } catch { return 0f; }
+    }
+
     public static bool GetReloadDown()
     {
 #if ENABLE_INPUT_SYSTEM
@@ -93,3 +147,4 @@ public static class InputBridge
         try { return Input.GetKeyDown(KeyCode.Escape); } catch { return false; }
     }
 }
+

@@ -17,6 +17,12 @@ public class SoundManager : MonoBehaviour
     private AudioClip victoryClip;
     private AudioClip gameOverClip;
     private AudioClip emptyClickClip;
+    private AudioClip shotgunShootClip;
+    private AudioClip revolverShootClip;
+    private AudioClip shotgunPumpClip;
+    private AudioClip axeSwingClip;
+    private AudioClip axeHitClip;
+    private AudioClip weaponPickupClip;
 
     private void Awake()
     {
@@ -111,6 +117,51 @@ public class SoundManager : MonoBehaviour
         {
             return (Random.value * 2f - 1f) * Mathf.Exp(-t * 60f) * 0.3f;
         });
+
+        shotgunShootClip = CreateProceduralClip("ShotgunShoot", 0.28f, (t, dur) =>
+        {
+            float noise = (Random.value * 2f - 1f) * Mathf.Exp(-t * 22f);
+            float boom = Mathf.Sin(2f * Mathf.PI * 75f * (1f - t / dur) * t) * Mathf.Exp(-t * 12f);
+            float punch = Mathf.Sin(2f * Mathf.PI * 180f * (1f - t / dur) * t) * Mathf.Exp(-t * 26f);
+            return Mathf.Clamp(noise * 0.85f + boom * 0.8f + punch * 0.4f, -1f, 1f);
+        });
+
+        revolverShootClip = CreateProceduralClip("RevolverShoot", 0.22f, (t, dur) =>
+        {
+            float crack = (Random.value * 2f - 1f) * Mathf.Exp(-t * 32f);
+            float pop = Mathf.Sin(2f * Mathf.PI * 220f * (1f - t / dur) * t) * Mathf.Exp(-t * 20f);
+            return Mathf.Clamp(crack * 0.8f + pop * 0.6f, -1f, 1f);
+        });
+
+        shotgunPumpClip = CreateProceduralClip("ShotgunPump", 0.25f, (t, dur) =>
+        {
+            float click1 = (t < 0.1f) ? (Random.value * 2f - 1f) * Mathf.Exp(-t * 50f) * 0.7f : 0f;
+            float click2 = (t > 0.14f && t < 0.24f) ? (Random.value * 2f - 1f) * Mathf.Exp(-(t - 0.14f) * 50f) * 0.7f : 0f;
+            return Mathf.Clamp(click1 + click2, -1f, 1f);
+        });
+
+        axeSwingClip = CreateProceduralClip("AxeSwing", 0.26f, (t, dur) =>
+        {
+            float f = Mathf.Lerp(120f, 380f, t / dur);
+            float whoosh = Mathf.Sin(2f * Mathf.PI * f * t) * Mathf.Sin(Mathf.PI * (t / dur));
+            float air = (Random.value * 2f - 1f) * Mathf.Sin(Mathf.PI * (t / dur)) * 0.35f;
+            return (whoosh * 0.6f + air) * 0.7f;
+        });
+
+        axeHitClip = CreateProceduralClip("AxeHit", 0.24f, (t, dur) =>
+        {
+            float flesh = Mathf.Sin(2f * Mathf.PI * 90f * t) * Mathf.Exp(-t * 18f);
+            float chop = (Random.value * 2f - 1f) * Mathf.Exp(-t * 30f);
+            return Mathf.Clamp(flesh * 0.7f + chop * 0.7f, -1f, 1f);
+        });
+
+        weaponPickupClip = CreateProceduralClip("WeaponPickup", 0.24f, (t, dur) =>
+        {
+            float tone1 = (t < 0.1f) ? Mathf.Sin(2f * Mathf.PI * 520f * t) : 0f;
+            float tone2 = (t >= 0.1f) ? Mathf.Sin(2f * Mathf.PI * 780f * t) : 0f;
+            float click = (Random.value * 2f - 1f) * Mathf.Exp(-t * 40f) * 0.3f;
+            return Mathf.Clamp((tone1 + tone2) * 0.4f + click, -1f, 1f);
+        });
     }
 
     private AudioClip CreateProceduralClip(string clipName, float duration, System.Func<float, float, float> sampleFunc)
@@ -131,6 +182,12 @@ public class SoundManager : MonoBehaviour
     }
 
     public void PlayShoot() => PlayOneShot(shootClip, 0.6f);
+    public void PlayShotgunShoot() => PlayOneShot(shotgunShootClip, 0.75f);
+    public void PlayRevolverShoot() => PlayOneShot(revolverShootClip, 0.65f);
+    public void PlayShotgunPump() => PlayOneShot(shotgunPumpClip, 0.55f);
+    public void PlayAxeSwing() => PlayOneShot(axeSwingClip, 0.6f);
+    public void PlayAxeHit() => PlayOneShot(axeHitClip, 0.7f);
+    public void PlayWeaponPickup() => PlayOneShot(weaponPickupClip, 0.6f);
     public void PlayHitMarker() => PlayOneShot(hitMarkerClip, 0.4f);
     public void PlayEnemyHurt() => PlayOneShot(enemyHurtClip, 0.4f);
     public void PlayEnemyDeath() => PlayOneShot(enemyDeathClip, 0.5f);

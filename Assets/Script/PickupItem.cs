@@ -164,7 +164,15 @@ public class PickupItem : MonoBehaviour
                 break;
 
             case ItemType.Ammo:
-                if (gun != null) gun.AddAmmo(ammoAmount);
+                var activeW = PlayerInventory.Instance != null ? PlayerInventory.Instance.GetActiveWeapon() : null;
+                if (activeW != null && !activeW.isMelee)
+                {
+                    activeW.AddReserveAmmo(ammoAmount);
+                }
+                else if (gun != null)
+                {
+                    gun.AddAmmo(ammoAmount);
+                }
                 if (SoundManager.Instance != null) SoundManager.Instance.PlayAmmo();
                 notifText = $"+{ammoAmount} Ammo";
                 break;

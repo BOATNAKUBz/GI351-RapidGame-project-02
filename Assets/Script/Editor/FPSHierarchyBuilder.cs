@@ -349,17 +349,21 @@ public static class FPSHierarchyBuilder
             sp.transform.position = pos;
         }
 
-        // 4. Setup HUD Canvas
-        GameObject oldCanvas = GameObject.Find("GameHUD_Canvas");
-        if (oldCanvas != null) Object.DestroyImmediate(oldCanvas);
+        // 4. Setup HUD Canvas (Keep existing Canvas if user customized it!)
+        GameObject canvasObj = GameObject.Find("GameHUD_Canvas");
+        if (canvasObj == null)
+        {
+            canvasObj = new GameObject("GameHUD_Canvas");
+            Canvas c = canvasObj.AddComponent<Canvas>();
+            c.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObj.AddComponent<GraphicRaycaster>();
+            CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+        }
 
-        GameObject canvasObj = new GameObject("GameHUD_Canvas");
-        Canvas canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvasObj.AddComponent<GraphicRaycaster>();
-        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
+        Canvas canvas = canvasObj.GetComponent<Canvas>();
+        if (canvas == null) canvas = canvasObj.AddComponent<Canvas>();
 
         Font defaultFont = GetSafeDefaultFont();
 
@@ -385,54 +389,62 @@ public static class FPSHierarchyBuilder
         hitMarker.color = new Color(1f, 0.2f, 0.2f, 0);
         CreateHitMarkerLines(hmObj.transform);
 
-        GameObject hpPanel = new GameObject("HealthPanel");
-        hpPanel.transform.SetParent(canvasObj.transform, false);
-        RectTransform hpRt = hpPanel.AddComponent<RectTransform>();
-        hpRt.anchorMin = hpRt.anchorMax = hpRt.pivot = Vector2.zero;
-        hpRt.anchoredPosition = new Vector2(40, 40);
-        hpRt.sizeDelta = new Vector2(300, 50);
+        Transform existingHpPanel = canvasObj.transform.Find("HealthPanel");
+        GameObject hpPanel = existingHpPanel != null ? existingHpPanel.gameObject : null;
+        Slider hpSlider = null;
+        Text hpText = null;
 
-        GameObject hpBg = new GameObject("HP_Bg");
-        hpBg.transform.SetParent(hpPanel.transform, false);
-        Image bgImg = hpBg.AddComponent<Image>();
-        bgImg.color = new Color(0.1f, 0.1f, 0.1f, 0.85f);
-        RectTransform bgRt = hpBg.GetComponent<RectTransform>();
-        bgRt.sizeDelta = new Vector2(300, 30);
-        bgRt.anchoredPosition = new Vector2(150, 25);
+        if (hpPanel == null)
+        {
+            hpPanel = new GameObject("HealthPanel");
+            hpPanel.transform.SetParent(canvasObj.transform, false);
+            RectTransform hpRt = hpPanel.AddComponent<RectTransform>();
+            hpRt.anchorMin = hpRt.anchorMax = hpRt.pivot = Vector2.zero;
+            hpRt.anchoredPosition = new Vector2(40, 40);
+            hpRt.sizeDelta = new Vector2(300, 50);
 
-        GameObject hpSliderObj = new GameObject("HP_Slider");
-        hpSliderObj.transform.SetParent(hpPanel.transform, false);
-        Slider hpSlider = hpSliderObj.AddComponent<Slider>();
-        hpSlider.minValue = 0f;
-        hpSlider.maxValue = 1f;
-        hpSlider.value = 1f;
-        RectTransform sliderRt = hpSliderObj.GetComponent<RectTransform>();
-        sliderRt.sizeDelta = new Vector2(290, 22);
-        sliderRt.anchoredPosition = new Vector2(150, 25);
+            GameObject hpBg = new GameObject("HP_Bg");
+            hpBg.transform.SetParent(hpPanel.transform, false);
+            Image bgImg = hpBg.AddComponent<Image>();
+            bgImg.color = new Color(0.1f, 0.1f, 0.1f, 0.85f);
+            RectTransform bgRt = hpBg.GetComponent<RectTransform>();
+            bgRt.sizeDelta = new Vector2(300, 30);
+            bgRt.anchoredPosition = new Vector2(150, 25);
 
-        GameObject fillObj = new GameObject("Fill");
-        fillObj.transform.SetParent(hpSliderObj.transform, false);
-        Image fillImg = fillObj.AddComponent<Image>();
-        fillImg.color = new Color(0.2f, 0.85f, 0.3f);
-        RectTransform fillRt = fillObj.GetComponent<RectTransform>();
-        fillRt.anchorMin = new Vector2(0, 0);
-        fillRt.anchorMax = new Vector2(1, 1);
-        fillRt.sizeDelta = Vector2.zero;
-        fillRt.anchoredPosition = Vector2.zero;
-        hpSlider.fillRect = fillRt;
+            GameObject hpSliderObj = new GameObject("HP_Slider");
+            hpSliderObj.transform.SetParent(hpPanel.transform, false);
+            hpSlider = hpSliderObj.AddComponent<Slider>();
+            hpSlider.minValue = 0f;
+            hpSlider.maxValue = 1f;
+            hpSlider.value = 1f;
+            RectTransform sliderRt = hpSliderObj.GetComponent<RectTransform>();
+            sliderRt.sizeDelta = new Vector2(290, 22);
+            sliderRt.anchoredPosition = new Vector2(150, 25);
 
-        GameObject hpTxtObj = new GameObject("HP_Text");
-        hpTxtObj.transform.SetParent(hpPanel.transform, false);
-        Text hpText = hpTxtObj.AddComponent<Text>();
-        hpText.font = defaultFont;
-        hpText.text = "HP: 100 / 100";
-        hpText.fontSize = 20;
-        hpText.fontStyle = FontStyle.Bold;
-        hpText.alignment = TextAnchor.MiddleCenter;
-        hpText.color = Color.white;
-        RectTransform txtRt = hpTxtObj.GetComponent<RectTransform>();
-        txtRt.sizeDelta = new Vector2(200, 30);
-        txtRt.anchoredPosition = new Vector2(150, 25);
+            GameObject fillObj = new GameObject("Fill");
+            fillObj.transform.SetParent(hpSliderObj.transform, false);
+            Image fillImg = fillObj.AddComponent<Image>();
+            fillImg.color = new Color(0.2f, 0.85f, 0.3f);
+            RectTransform fillRt = fillObj.GetComponent<RectTransform>();
+            fillRt.anchorMin = new Vector2(0, 0);
+            fillRt.anchorMax = new Vector2(1, 1);
+            fillRt.sizeDelta = Vector2.zero;
+            fillRt.anchoredPosition = Vector2.zero;
+            hpSlider.fillRect = fillRt;
+
+            GameObject hpTxtObj = new GameObject("HP_Text");
+            hpTxtObj.transform.SetParent(hpPanel.transform, false);
+            hpText = hpTxtObj.AddComponent<Text>();
+            hpText.font = defaultFont;
+            hpText.text = "HP: 100 / 100";
+            hpText.fontSize = 18;
+            hpText.fontStyle = FontStyle.Bold;
+            hpText.alignment = TextAnchor.MiddleCenter;
+            hpText.color = Color.white;
+            RectTransform txtRt = hpTxtObj.GetComponent<RectTransform>();
+            txtRt.sizeDelta = new Vector2(300, 30);
+            txtRt.anchoredPosition = new Vector2(150, 25);
+        }
 
         GameObject ammoPanel = new GameObject("AmmoPanel");
         ammoPanel.transform.SetParent(canvasObj.transform, false);
