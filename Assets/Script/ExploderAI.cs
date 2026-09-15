@@ -7,11 +7,12 @@ public class ExploderAI : EnemyAI
     public float explosionRadius = 4f;
     public float explosionDamage = 80f;
     public float fuseTime = 0.5f;
+    public GameObject explosionFX; // Optional: เผื่ออยากใส่ Particle ตอนระเบิด
     private bool isExploding = false;
 
     protected override void OnReachPlayer()
     {
-        base.OnReachPlayer();
+        // ตัด base.OnReachPlayer(); ออก เพื่อไม่ให้ตีธรรมดาก่อนระเบิด
 
         if (!isExploding)
         {
@@ -22,16 +23,20 @@ public class ExploderAI : EnemyAI
     private IEnumerator ExplodeRoutine()
     {
         isExploding = true;
-        moveSpeed = 0; // หยุดเดินเมื่อเริ่มจุดชนวน
+        moveSpeed = 0f; // หยุดเดินเมื่อเริ่มจุดชนวน
 
-        // เช็ค Component Animator ของตัวเองโดยตรงเพื่อป้องกัน Error
-        Animator anim = GetComponent<Animator>();
-        if (anim != null)
+        if (animator != null)
         {
-            anim.SetTrigger("Attack");
+            try { animator.SetTrigger("Attack"); } catch { }
         }
 
         yield return new WaitForSeconds(fuseTime);
+
+        // แสดงเอฟเฟกต์ระเบิด (ถ้ามี)
+        if (explosionFX != null)
+        {
+            Instantiate(explosionFX, transform.position, Quaternion.identity);
+        }
 
         // คำนวณดาเมจวงกว้าง (AOE)
         Collider[] hits = Physics.OverlapSphere(transform.position, explosionRadius);
@@ -54,5 +59,12 @@ public class ExploderAI : EnemyAI
         }
 
         Destroy(gameObject);
+    }
+
+    // วาดวงกลมรัศมีระเบิดในหน้าต่าง Scene เพื่อให้กะระยะได้ง่ายขึ้น
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, explosionRadius);
     }
 }

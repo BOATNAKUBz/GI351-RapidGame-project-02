@@ -1243,7 +1243,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea8d366930bb7344bb99ef253598e48c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChickenAI
-  dropItemPrefab: {fileID: 0}
+  dropItemPrefab: {fileID: 8421487562004006942, guid: b413c9041d42bd04f8923f4ee92ab1f7, type: 3}
   dropChance: 0.35
   stats:
     type: 0
@@ -1261,8 +1261,11 @@ MonoBehaviour:
   moveSpeed: 6
   stoppingDistance: 1.2
   attackRange: 1.5
-  attackDamage: 8
+  attackDamage: 1
   attackCooldown: 0.5
+  snapToGround: 1
+  groundCheckDistance: 10
+  raycastStartHeight: 1.5
 --- !u!114 &8881504610387854134
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1277,6 +1280,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 35
   currentHealth: 35
+  customDisplayName: 
 --- !u!1 &8122850409471221505
 GameObject:
   m_ObjectHideFlags: 0

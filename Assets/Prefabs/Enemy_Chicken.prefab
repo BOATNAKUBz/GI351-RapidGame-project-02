@@ -1237,11 +1237,11 @@ MonoBehaviour:
   moveSpeed: 6
   stoppingDistance: 1.2
   attackRange: 1.5
+  attackDamage: 1
+  attackCooldown: 0.6
   snapToGround: 1
   groundCheckDistance: 10
   raycastStartHeight: 1.5
-  attackDamage: 8
-  attackCooldown: 0.6
 --- !u!114 &1457005360685122265
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1256,6 +1256,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 40
   currentHealth: 35
+  customDisplayName: 
 --- !u!136 &7158691751897951106
 CapsuleCollider:
   m_ObjectHideFlags: 0

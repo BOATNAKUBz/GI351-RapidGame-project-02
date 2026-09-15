@@ -19,9 +19,9 @@ public class RaptorAI : EnemyAI
     protected override void Start()
     {
         base.Start();
-        attackDamage = 30f;
-        attackCooldown = 0.8f;
-        if (moveSpeed <= 3.5f) moveSpeed = 5.5f;
+
+        // เอาการล็อคค่า attackDamage, attackCooldown, moveSpeed ออก 
+        // เพื่อให้สามารถปรับและเซฟค่าใน Unity Inspector ได้ตามต้องการ
 
         agent = GetComponent<NavMeshAgent>();
         if (agent != null)
@@ -99,6 +99,7 @@ public class RaptorAI : EnemyAI
                 SnapToGround();
             }
 
+            // ตีธรรมดาเมื่อเข้าใกล้
             if (distance <= attackRange)
             {
                 OnReachPlayer();
