@@ -256,37 +256,18 @@ public class WaveManager : MonoBehaviour
 
     public void RestartGame()
     {
-        var enemies = FindObjectsByType<EnemyHealth>();
-        foreach (var e in enemies) Destroy(e.gameObject);
+        Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
-        var pickups = FindObjectsByType<PickupItem>();
-        foreach (var p in pickups) Destroy(p.gameObject);
-
-        var playerHealth = FindAnyObjectByType<PlayerHealth>();
-        if (playerHealth != null) playerHealth.ResetHealth();
-
-        if (PlayerInventory.Instance != null && PlayerInventory.Instance.slots != null)
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (!string.IsNullOrEmpty(sceneName))
         {
-            foreach (var w in PlayerInventory.Instance.slots)
-            {
-                if (w != null && !w.isMelee)
-                {
-                    w.currentAmmo = w.magazineSize;
-                    w.reserveAmmo = 36;
-                    w.NotifyAmmo();
-                }
-            }
+            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
         }
-
-        var gun = FindAnyObjectByType<FPSGun>();
-        if (gun != null)
+        else
         {
-            gun.currentAmmo = gun.magazineSize;
-            gun.reserveAmmo = 120;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
-
-        if (GameUIManager.Instance != null) GameUIManager.Instance.HideEndScreens();
-
-        StartWave(0);
     }
 }

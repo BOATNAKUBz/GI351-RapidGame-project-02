@@ -77,6 +77,40 @@ public class PlayerHealth : MonoBehaviour
         OnDied?.Invoke();
     }
 
+    void Update()
+    {
+        if (isDead)
+        {
+            bool rPressed = InputBridge.GetReloadDown();
+#if ENABLE_INPUT_SYSTEM
+            if (!rPressed && UnityEngine.InputSystem.Keyboard.current != null)
+            {
+                rPressed = UnityEngine.InputSystem.Keyboard.current.rKey.wasPressedThisFrame;
+            }
+#endif
+            if (!rPressed)
+            {
+                try { rPressed = Input.GetKeyDown(KeyCode.R); } catch { }
+            }
+
+            if (rPressed)
+            {
+                Time.timeScale = 1f;
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+                string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (!string.IsNullOrEmpty(sceneName))
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+                }
+                else
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+                }
+            }
+        }
+    }
+
     public void ResetHealth()
     {
         isDead = false;

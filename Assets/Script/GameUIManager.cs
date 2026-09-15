@@ -133,9 +133,7 @@ public class GameUIManager : MonoBehaviour
             if (restartBtn != null)
             {
                 restartBtn.onClick.RemoveAllListeners();
-                restartBtn.onClick.AddListener(() => {
-                    if (WaveManager.Instance != null) WaveManager.Instance.RestartGame();
-                });
+                restartBtn.onClick.AddListener(TriggerRestart);
             }
 
             var menuBtn = gameOverPanel.transform.Find("MainMenuButton")?.GetComponent<Button>();
@@ -152,9 +150,7 @@ public class GameUIManager : MonoBehaviour
             if (playAgainBtn != null)
             {
                 playAgainBtn.onClick.RemoveAllListeners();
-                playAgainBtn.onClick.AddListener(() => {
-                    if (WaveManager.Instance != null) WaveManager.Instance.RestartGame();
-                });
+                playAgainBtn.onClick.AddListener(TriggerRestart);
             }
 
             var menuBtn = victoryPanel.transform.Find("MainMenuButton")?.GetComponent<Button>();
@@ -222,14 +218,56 @@ public class GameUIManager : MonoBehaviour
     void Update()
     {
         // Quick restart with R when game over or victory
-        if (InputBridge.GetReloadDown())
+        bool isGameOverOrVictory = false;
+        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) isGameOverOrVictory = true;
+        if (victoryPanel != null && victoryPanel.activeInHierarchy) isGameOverOrVictory = true;
+
+        if (!isGameOverOrVictory)
         {
-            if ((gameOverPanel != null && gameOverPanel.activeSelf) || (victoryPanel != null && victoryPanel.activeSelf))
+            var ph = FindAnyObjectByType<PlayerHealth>();
+            if (ph != null && ph.isDead) isGameOverOrVictory = true;
+        }
+
+        if (isGameOverOrVictory)
+        {
+            bool rPressed = InputBridge.GetReloadDown();
+#if ENABLE_INPUT_SYSTEM
+            if (!rPressed && UnityEngine.InputSystem.Keyboard.current != null)
             {
-                if (WaveManager.Instance != null)
-                {
-                    WaveManager.Instance.RestartGame();
-                }
+                rPressed = UnityEngine.InputSystem.Keyboard.current.rKey.wasPressedThisFrame;
+            }
+#endif
+            if (!rPressed)
+            {
+                try { rPressed = Input.GetKeyDown(KeyCode.R); } catch { }
+            }
+
+            if (rPressed)
+            {
+                TriggerRestart();
+            }
+        }
+    }
+
+    public void TriggerRestart()
+    {
+        Time.timeScale = 1f;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+        if (WaveManager.Instance != null)
+        {
+            WaveManager.Instance.RestartGame();
+        }
+        else
+        {
+            string sceneName = SceneManager.GetActiveScene().name;
+            if (!string.IsNullOrEmpty(sceneName))
+            {
+                SceneManager.LoadScene(sceneName);
+            }
+            else
+            {
+                SceneManager.LoadScene(0);
             }
         }
     }
