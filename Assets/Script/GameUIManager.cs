@@ -22,7 +22,12 @@ public class GameUIManager : MonoBehaviour
     public GameObject gameOverPanel;
     public GameObject victoryPanel;
 
+    [Header("Dash UI References")]
+    public Image dashCooldownFill;
+    public Text dashCooldownText;
+
     private Font defaultFont;
+    private PlayerController playerController;
 
     void Awake()
     {
@@ -118,6 +123,16 @@ public class GameUIManager : MonoBehaviour
                 var ws = t.Find("WeaponSlotsPanel");
                 if (ws != null) weaponSlotsText = ws.GetComponent<Text>();
             }
+            if (dashCooldownFill == null)
+            {
+                var dcFill = t.Find("DashPanel/Fill");
+                if (dcFill != null) dashCooldownFill = dcFill.GetComponent<Image>();
+            }
+            if (dashCooldownText == null)
+            {
+                var dcText = t.Find("DashPanel/DashText");
+                if (dcText != null) dashCooldownText = dcText.GetComponent<Text>();
+            }
 
             return true;
         }
@@ -166,6 +181,9 @@ public class GameUIManager : MonoBehaviour
     {
         SetupHpSlider();
 
+        // Bind to Player Controller for Dash UI
+        playerController = FindAnyObjectByType<PlayerController>();
+
         // Bind to Player
         var playerHealth = FindAnyObjectByType<PlayerHealth>();
         if (playerHealth != null)
@@ -204,8 +222,6 @@ public class GameUIManager : MonoBehaviour
 
     private void SetupHpSlider()
     {
-        // NOTE: ผู้เล่นสามารถปรับแต่งตำแหน่ง ขนาด สี และ Layout ของ HP Bar ใน Canvas ได้อิสระตามต้องการ
-        // สคริปต์จะไม่ไปเขียนทับ RectTransform / Anchors / Pivot ของ Slider
         if (hpSlider != null)
         {
             hpSlider.minValue = 0f;
@@ -217,6 +233,8 @@ public class GameUIManager : MonoBehaviour
 
     void Update()
     {
+        UpdateDashUI();
+
         // Quick restart with R when game over or victory
         bool isGameOverOrVictory = false;
         if (gameOverPanel != null && gameOverPanel.activeInHierarchy) isGameOverOrVictory = true;
@@ -245,6 +263,48 @@ public class GameUIManager : MonoBehaviour
             if (rPressed)
             {
                 TriggerRestart();
+            }
+        }
+    }
+
+    private void UpdateDashUI()
+    {
+        if (playerController == null)
+        {
+            playerController = FindAnyObjectByType<PlayerController>();
+            if (playerController == null) return;
+        }
+
+        float remaining = playerController.dashCooldownRemaining;
+        float totalCooldown = playerController.dashCooldown;
+
+        if (remaining > 0f)
+        {
+            float fillRatio = 1f - (remaining / totalCooldown);
+            if (dashCooldownFill != null)
+            {
+                dashCooldownFill.fillAmount = fillRatio;
+                dashCooldownFill.color = new Color(0.3f, 0.7f, 1f, 0.5f);
+            }
+
+            if (dashCooldownText != null)
+            {
+                dashCooldownText.text = $"DASH: {remaining:F1}s";
+                dashCooldownText.color = new Color(0.8f, 0.8f, 0.8f);
+            }
+        }
+        else
+        {
+            if (dashCooldownFill != null)
+            {
+                dashCooldownFill.fillAmount = 1f;
+                dashCooldownFill.color = new Color(0.2f, 0.8f, 1f, 1f);
+            }
+
+            if (dashCooldownText != null)
+            {
+                dashCooldownText.text = "DASH: READY";
+                dashCooldownText.color = new Color(0.3f, 1f, 0.5f);
             }
         }
     }
@@ -350,7 +410,7 @@ public class GameUIManager : MonoBehaviour
         sliderRt.sizeDelta = new Vector2(300, 30);
         sliderRt.pivot = new Vector2(0.5f, 0.5f);
         sliderRt.anchoredPosition = new Vector2(150, 25);
-        
+
         // Fill Area
         GameObject fillAreaObj = new GameObject("Fill Area");
         fillAreaObj.transform.SetParent(hpSliderObj.transform, false);
@@ -405,6 +465,9 @@ public class GameUIManager : MonoBehaviour
         ammoText.alignment = TextAnchor.MiddleRight;
         ammoText.color = new Color(1f, 0.85f, 0.3f);
 
+        // Bottom Right: Dash Panel (วางเหนือ Ammo Panel)
+        CreateDashUI(canvasObj.transform);
+
         // Top Left: Wave Info Panel
         GameObject wavePanel = new GameObject("WavePanel");
         wavePanel.transform.SetParent(canvasObj.transform, false);
@@ -454,6 +517,59 @@ public class GameUIManager : MonoBehaviour
         // Build End Game Panels
         BuildGameOverPanel(canvasObj.transform);
         BuildVictoryPanel(canvasObj.transform);
+    }
+
+    private void CreateDashUI(Transform canvasParent)
+    {
+        GameObject dashPanel = new GameObject("DashPanel");
+        dashPanel.transform.SetParent(canvasParent, false);
+
+        RectTransform dpRt = dashPanel.AddComponent<RectTransform>();
+        dpRt.anchorMin = new Vector2(1, 0);
+        dpRt.anchorMax = new Vector2(1, 0);
+        dpRt.pivot = new Vector2(1, 0);
+        dpRt.anchoredPosition = new Vector2(-40, 110);
+        dpRt.sizeDelta = new Vector2(200, 24);
+
+        // Background
+        GameObject bg = new GameObject("Bg");
+        bg.transform.SetParent(dashPanel.transform, false);
+        Image bgImg = bg.AddComponent<Image>();
+        bgImg.color = new Color(0.1f, 0.1f, 0.1f, 0.6f);
+        RectTransform bgRt = bg.GetComponent<RectTransform>();
+        bgRt.anchorMin = Vector2.zero;
+        bgRt.anchorMax = Vector2.one;
+        bgRt.sizeDelta = Vector2.zero;
+
+        // Fill Bar
+        GameObject fill = new GameObject("Fill");
+        fill.transform.SetParent(dashPanel.transform, false);
+        dashCooldownFill = fill.AddComponent<Image>();
+        dashCooldownFill.type = Image.Type.Filled;
+        dashCooldownFill.fillMethod = Image.FillMethod.Horizontal;
+        dashCooldownFill.fillOrigin = 0;
+        dashCooldownFill.color = new Color(0.2f, 0.8f, 1f, 1f);
+
+        RectTransform fillRt = fill.GetComponent<RectTransform>();
+        fillRt.anchorMin = Vector2.zero;
+        fillRt.anchorMax = Vector2.one;
+        fillRt.sizeDelta = Vector2.zero;
+
+        // Dash Text
+        GameObject txtObj = new GameObject("DashText");
+        txtObj.transform.SetParent(dashPanel.transform, false);
+        dashCooldownText = txtObj.AddComponent<Text>();
+        dashCooldownText.font = defaultFont;
+        dashCooldownText.text = "DASH: READY";
+        dashCooldownText.fontSize = 16;
+        dashCooldownText.fontStyle = FontStyle.Bold;
+        dashCooldownText.alignment = TextAnchor.MiddleCenter;
+        dashCooldownText.color = new Color(0.3f, 1f, 0.5f);
+
+        RectTransform txtRt = txtObj.GetComponent<RectTransform>();
+        txtRt.anchorMin = Vector2.zero;
+        txtRt.anchorMax = Vector2.one;
+        txtRt.sizeDelta = Vector2.zero;
     }
 
     void CreateCrosshairLines(Transform parent)
@@ -613,7 +729,6 @@ public class GameUIManager : MonoBehaviour
             hpSlider.value = ratio;
             if (hpSlider.fillRect != null)
             {
-                // Force fill rect to accurately span from 0 to ratio width
                 hpSlider.fillRect.anchorMin = new Vector2(0, 0);
                 hpSlider.fillRect.anchorMax = new Vector2(ratio, 1);
                 hpSlider.fillRect.pivot = new Vector2(0, 0.5f);
@@ -734,7 +849,6 @@ public class GameUIManager : MonoBehaviour
         interactPromptText.alignment = TextAnchor.MiddleCenter;
         interactPromptText.color = new Color(1f, 0.9f, 0.2f);
 
-        // Subtle outline
         Outline outline = ipObj.AddComponent<Outline>();
         outline.effectColor = new Color(0, 0, 0, 0.8f);
         outline.effectDistance = new Vector2(1.5f, -1.5f);
@@ -749,7 +863,7 @@ public class GameUIManager : MonoBehaviour
         wsObj.transform.SetParent(hudCanvas.transform, false);
         RectTransform rt = wsObj.AddComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(1, 0);
-        rt.anchoredPosition = new Vector2(-40, 110);
+        rt.anchoredPosition = new Vector2(-40, 150); // เขยิบขึ้นเพื่อไม่ให้ทับ Dash UI
         rt.sizeDelta = new Vector2(400, 40);
 
         weaponSlotsText = wsObj.AddComponent<Text>();

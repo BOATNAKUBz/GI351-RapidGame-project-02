@@ -48,7 +48,6 @@ public class GameManager : MonoBehaviour
         }
         var standalone = es.GetComponent<UnityEngine.EventSystems.StandaloneInputModule>();
         if (standalone != null) Destroy(standalone);
-
 #if ENABLE_INPUT_SYSTEM
         if (es.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>() == null)
         {
@@ -187,11 +186,10 @@ public class GameManager : MonoBehaviour
         var oldCapsule = player.GetComponent<CapsuleCollider>();
         if (oldCapsule != null) Destroy(oldCapsule);
 
-        // Ensure PlayerController
+        // Ensure PlayerController (ตั้งค่าเฉพาะความเร็วเดิน)
         var pController = player.GetComponent<PlayerController>();
         if (pController == null) pController = player.AddComponent<PlayerController>();
         pController.walkSpeed = 6.5f;
-        pController.sprintSpeed = 10.5f;
 
         // Ensure PlayerHealth
         var pHealth = player.GetComponent<PlayerHealth>();

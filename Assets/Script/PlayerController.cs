@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -5,9 +6,13 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float walkSpeed = 6f;
-    public float sprintSpeed = 10f;
     public float jumpHeight = 1.3f;
     public float gravity = -20f;
+
+    [Header("Dash Settings")]
+    public float dashDistance = 10f;
+    public float dashDuration = 0.2f;
+    public float dashCooldown = 1.5f;
 
     [Header("Look Settings")]
     public Transform cameraTransform;
@@ -16,12 +21,14 @@ public class PlayerController : MonoBehaviour
 
     [Header("State")]
     public bool canMove = true;
-    public bool isSprinting { get; private set; }
+    public bool isDashing { get; private set; }
+    public float dashCooldownRemaining { get; private set; }
 
     private CharacterController controller;
     private Vector3 velocity;
     private bool isGrounded;
     private float xRotation = 0f;
+    private float lastDashTime = -999f;
 
     void Awake()
     {
@@ -71,6 +78,9 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
+        // คำนวณเวลา Cooldown สำหรับใช้งาน UI
+        dashCooldownRemaining = Mathf.Max(0f, (lastDashTime + dashCooldown) - Time.time);
+
         // Click to lock cursor when clicking in game view
         if (InputBridge.GetFire() && Cursor.lockState != CursorLockMode.Locked)
         {
@@ -86,7 +96,13 @@ public class PlayerController : MonoBehaviour
         if (!canMove) return;
 
         HandleLook();
-        HandleMovement();
+
+        // ระหว่าง Dash จะข้ามการเคลื่อนที่ปกติ
+        if (!isDashing)
+        {
+            HandleDashInput();
+            HandleMovement();
+        }
     }
 
     void HandleLook()
@@ -117,11 +133,9 @@ public class PlayerController : MonoBehaviour
         float moveX = InputBridge.GetHorizontal();
         float moveZ = InputBridge.GetVertical();
 
-        isSprinting = InputBridge.GetSprint() && moveZ > 0.1f;
-        float currentSpeed = isSprinting ? sprintSpeed : walkSpeed;
-
+        // เคลื่อนที่ด้วยความเร็ว walkSpeed แบบคงที่
         Vector3 move = transform.right * moveX + transform.forward * moveZ;
-        controller.Move(move * currentSpeed * Time.deltaTime);
+        controller.Move(move * walkSpeed * Time.deltaTime);
 
         if (InputBridge.GetJumpDown() && isGrounded)
         {
@@ -130,6 +144,42 @@ public class PlayerController : MonoBehaviour
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+    }
+
+    private void HandleDashInput()
+    {
+        // กด Left Shift เพื่อ Dash
+        if (Input.GetKeyDown(KeyCode.LeftShift) && dashCooldownRemaining <= 0f)
+        {
+            StartCoroutine(PerformDash());
+        }
+    }
+
+    private IEnumerator PerformDash()
+    {
+        isDashing = true;
+        lastDashTime = Time.time;
+
+        float moveX = InputBridge.GetHorizontal();
+        float moveZ = InputBridge.GetVertical();
+        Vector3 dashDir = (transform.right * moveX + transform.forward * moveZ).normalized;
+
+        if (dashDir == Vector3.zero)
+        {
+            dashDir = transform.forward;
+        }
+
+        float dashSpeed = dashDistance / dashDuration;
+        float elapsed = 0f;
+
+        while (elapsed < dashDuration)
+        {
+            controller.Move(dashDir * dashSpeed * Time.deltaTime);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        isDashing = false;
     }
 
     public void LockCursor()

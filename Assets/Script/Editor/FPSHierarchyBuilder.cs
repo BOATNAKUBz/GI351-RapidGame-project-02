@@ -309,9 +309,9 @@ public static class FPSHierarchyBuilder
         cc.radius = 0.5f;
         cc.center = new Vector3(0, 1f, 0);
 
+        // ตั้งค่าเฉพาะความเร็วเดิน (ตัด sprintSpeed ออก)
         var pCtrl = player.GetComponent<PlayerController>() ?? player.AddComponent<PlayerController>();
         pCtrl.walkSpeed = 6.5f;
-        pCtrl.sprintSpeed = 10.5f;
 
         var pHealth = player.GetComponent<PlayerHealth>() ?? player.AddComponent<PlayerHealth>();
 
@@ -349,7 +349,7 @@ public static class FPSHierarchyBuilder
             sp.transform.position = pos;
         }
 
-        // 4. Setup HUD Canvas (Keep existing Canvas if user customized it!)
+        // 4. Setup HUD Canvas
         GameObject canvasObj = GameObject.Find("GameHUD_Canvas");
         if (canvasObj == null)
         {
