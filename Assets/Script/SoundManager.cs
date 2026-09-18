@@ -6,6 +6,27 @@ public class SoundManager : MonoBehaviour
 
     private AudioSource audioSource;
 
+    [Header("Custom Sound Clips (Leave empty to use Procedural Audio)")]
+    public AudioClip customShootClip;
+    public AudioClip customHitMarkerClip;
+    public AudioClip customEnemyHurtClip;
+    public AudioClip customEnemyDeathClip;
+    public AudioClip customPlayerHurtClip;
+    public AudioClip customPickupMedkitClip;
+    public AudioClip customPickupAmmoClip;
+    public AudioClip customWaveStartClip;
+    public AudioClip customVictoryClip;
+    public AudioClip customGameOverClip;
+    public AudioClip customEmptyClickClip;
+    public AudioClip customShotgunShootClip;
+    public AudioClip customRevolverShootClip;
+    public AudioClip customShotgunPumpClip;
+    public AudioClip customAxeSwingClip;
+    public AudioClip customAxeHitClip;
+    public AudioClip customWeaponPickupClip;
+    public AudioClip customDashClip;
+
+    // Procedural Clips (Fallback)
     private AudioClip shootClip;
     private AudioClip hitMarkerClip;
     private AudioClip enemyHurtClip;
@@ -23,6 +44,7 @@ public class SoundManager : MonoBehaviour
     private AudioClip axeSwingClip;
     private AudioClip axeHitClip;
     private AudioClip weaponPickupClip;
+    private AudioClip dashClip;
 
     private void Awake()
     {
@@ -85,13 +107,13 @@ public class SoundManager : MonoBehaviour
 
         pickupMedkitClip = CreateProceduralClip("MedkitPickup", 0.25f, (t, dur) =>
         {
-            float freq = (t < 0.12f) ? 587.33f : 880f; // D5 to A5
+            float freq = (t < 0.12f) ? 587.33f : 880f;
             return Mathf.Sin(2f * Mathf.PI * freq * t) * Mathf.Exp(-t * 8f) * 0.35f;
         });
 
         pickupAmmoClip = CreateProceduralClip("AmmoPickup", 0.2f, (t, dur) =>
         {
-            float freq = (t < 0.1f) ? 440f : 659.25f; // A4 to E5
+            float freq = (t < 0.1f) ? 440f : 659.25f;
             return Mathf.Sin(2f * Mathf.PI * freq * t) * Mathf.Exp(-t * 10f) * 0.35f;
         });
 
@@ -162,6 +184,14 @@ public class SoundManager : MonoBehaviour
             float click = (Random.value * 2f - 1f) * Mathf.Exp(-t * 40f) * 0.3f;
             return Mathf.Clamp((tone1 + tone2) * 0.4f + click, -1f, 1f);
         });
+
+        dashClip = CreateProceduralClip("Dash", 0.2f, (t, dur) =>
+        {
+            float freq = Mathf.Lerp(450f, 120f, t / dur);
+            float whoosh = Mathf.Sin(2f * Mathf.PI * freq * t) * Mathf.Sin(Mathf.PI * (t / dur));
+            float airNoise = (Random.value * 2f - 1f) * Mathf.Sin(Mathf.PI * (t / dur)) * 0.5f;
+            return Mathf.Clamp((whoosh * 0.5f + airNoise * 0.5f) * Mathf.Exp(-t * 4f), -1f, 1f);
+        });
     }
 
     private AudioClip CreateProceduralClip(string clipName, float duration, System.Func<float, float, float> sampleFunc)
@@ -181,23 +211,25 @@ public class SoundManager : MonoBehaviour
         return clip;
     }
 
-    public void PlayShoot() => PlayOneShot(shootClip, 0.6f);
-    public void PlayShotgunShoot() => PlayOneShot(shotgunShootClip, 0.75f);
-    public void PlayRevolverShoot() => PlayOneShot(revolverShootClip, 0.65f);
-    public void PlayShotgunPump() => PlayOneShot(shotgunPumpClip, 0.55f);
-    public void PlayAxeSwing() => PlayOneShot(axeSwingClip, 0.6f);
-    public void PlayAxeHit() => PlayOneShot(axeHitClip, 0.7f);
-    public void PlayWeaponPickup() => PlayOneShot(weaponPickupClip, 0.6f);
-    public void PlayHitMarker() => PlayOneShot(hitMarkerClip, 0.4f);
-    public void PlayEnemyHurt() => PlayOneShot(enemyHurtClip, 0.4f);
-    public void PlayEnemyDeath() => PlayOneShot(enemyDeathClip, 0.5f);
-    public void PlayPlayerHurt() => PlayOneShot(playerHurtClip, 0.7f);
-    public void PlayMedkit() => PlayOneShot(pickupMedkitClip, 0.5f);
-    public void PlayAmmo() => PlayOneShot(pickupAmmoClip, 0.5f);
-    public void PlayWaveStart() => PlayOneShot(waveStartClip, 0.6f);
-    public void PlayVictory() => PlayOneShot(victoryClip, 0.7f);
-    public void PlayGameOver() => PlayOneShot(gameOverClip, 0.7f);
-    public void PlayEmptyClick() => PlayOneShot(emptyClickClip, 0.4f);
+    // Public Methods (เช็กว่ามี Custom Clip ไหม ถ้าไม่มีให้ใช้ Procedural Clip)
+    public void PlayShoot() => PlayOneShot(customShootClip != null ? customShootClip : shootClip, 0.6f);
+    public void PlayShotgunShoot() => PlayOneShot(customShotgunShootClip != null ? customShotgunShootClip : shotgunShootClip, 0.75f);
+    public void PlayRevolverShoot() => PlayOneShot(customRevolverShootClip != null ? customRevolverShootClip : revolverShootClip, 0.65f);
+    public void PlayShotgunPump() => PlayOneShot(customShotgunPumpClip != null ? customShotgunPumpClip : shotgunPumpClip, 0.55f);
+    public void PlayAxeSwing() => PlayOneShot(customAxeSwingClip != null ? customAxeSwingClip : axeSwingClip, 0.6f);
+    public void PlayAxeHit() => PlayOneShot(customAxeHitClip != null ? customAxeHitClip : axeHitClip, 0.7f);
+    public void PlayWeaponPickup() => PlayOneShot(customWeaponPickupClip != null ? customWeaponPickupClip : weaponPickupClip, 0.6f);
+    public void PlayHitMarker() => PlayOneShot(customHitMarkerClip != null ? customHitMarkerClip : hitMarkerClip, 0.4f);
+    public void PlayEnemyHurt() => PlayOneShot(customEnemyHurtClip != null ? customEnemyHurtClip : enemyHurtClip, 0.4f);
+    public void PlayEnemyDeath() => PlayOneShot(customEnemyDeathClip != null ? customEnemyDeathClip : enemyDeathClip, 0.5f);
+    public void PlayPlayerHurt() => PlayOneShot(customPlayerHurtClip != null ? customPlayerHurtClip : playerHurtClip, 0.7f);
+    public void PlayMedkit() => PlayOneShot(customPickupMedkitClip != null ? customPickupMedkitClip : pickupMedkitClip, 0.5f);
+    public void PlayAmmo() => PlayOneShot(customPickupAmmoClip != null ? customPickupAmmoClip : pickupAmmoClip, 0.5f);
+    public void PlayWaveStart() => PlayOneShot(customWaveStartClip != null ? customWaveStartClip : waveStartClip, 0.6f);
+    public void PlayVictory() => PlayOneShot(customVictoryClip != null ? customVictoryClip : victoryClip, 0.7f);
+    public void PlayGameOver() => PlayOneShot(customGameOverClip != null ? customGameOverClip : gameOverClip, 1.0f);
+    public void PlayEmptyClick() => PlayOneShot(customEmptyClickClip != null ? customEmptyClickClip : emptyClickClip, 0.4f);
+    public void PlayDash() => PlayOneShot(customDashClip != null ? customDashClip : dashClip, 0.65f);
 
     private void PlayOneShot(AudioClip clip, float volume = 1f)
     {
