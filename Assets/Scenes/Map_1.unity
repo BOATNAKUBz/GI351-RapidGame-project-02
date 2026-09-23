@@ -2440,8 +2440,8 @@ MonoBehaviour:
   customShotgunShootClip: {fileID: 0}
   customRevolverShootClip: {fileID: 0}
   customShotgunPumpClip: {fileID: 0}
-  customAxeSwingClip: {fileID: 0}
-  customAxeHitClip: {fileID: 0}
+  customAxeSwingClip: {fileID: 8300000, guid: caf14903051b3e44c9f0340c1e193444, type: 3}
+  customAxeHitClip: {fileID: 8300000, guid: e621eb06ffa9c4b48b762ba2a3b1c4b9, type: 3}
   customWeaponPickupClip: {fileID: 0}
   customDashClip: {fileID: 0}
 --- !u!114 &405094517
