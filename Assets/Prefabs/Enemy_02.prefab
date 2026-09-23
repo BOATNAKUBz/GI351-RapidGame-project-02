@@ -294,7 +294,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChickenAI
   dropItemPrefab: {fileID: 8421487562004006942, guid: b413c9041d42bd04f8923f4ee92ab1f7, type: 3}
-  dropChance: 0.35
+  dropChance: 0.1
   stats:
     type: 0
     displayName: Chicken
@@ -308,10 +308,10 @@ MonoBehaviour:
     emissionColor: {r: 0, g: 0, b: 0, a: 0}
     dropChance: 0.35
   player: {fileID: 0}
-  moveSpeed: 6
+  moveSpeed: 13
   stoppingDistance: 1.2
   attackRange: 1.5
-  attackDamage: 1
+  attackDamage: 5
   attackCooldown: 2
   snapToGround: 1
   groundCheckDistance: 10
@@ -328,7 +328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ee49e1dfdd11eb429e59e0ef55fc6cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 40
+  maxHealth: 20
   currentHealth: 35
   customDisplayName: 
 --- !u!136 &3695851459206890561

@@ -446,8 +446,8 @@ MonoBehaviour:
   range: 2.6
   isMelee: 1
   pelletCount: 1
-  spreadAngle: 0
-  meleeRadius: 0.75
+  spreadAngle: 120
+  meleeRadius: 4.2
   meleeTrail: {fileID: 0}
   magazineSize: 0
   currentAmmo: 0
@@ -1294,7 +1294,7 @@ MeshRenderer:
   m_RenderingLayerMask: 257
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a5b6d25e105717a42a9ab763ef1dd0d1, type: 2}
+  - {fileID: 2100000, guid: 0d7ca8495341bc04da53c6b03a244ec5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1497,14 +1497,14 @@ MonoBehaviour:
   fireRate: 0.85
   range: 50
   isMelee: 0
-  pelletCount: 8
-  spreadAngle: 4.2
-  meleeRadius: 0.65
+  pelletCount: 20
+  spreadAngle: 70
+  meleeRadius: 20
   meleeTrail: {fileID: 0}
   magazineSize: 6
   currentAmmo: 6
   reserveAmmo: 24
-  reloadTime: 2.2
+  reloadTime: 1
   gunTransform: {fileID: 4901170902588712172}
   muzzlePoint: {fileID: 4601905272682718642}
   handsTransform: {fileID: 2806854547615556347}
@@ -1584,7 +1584,7 @@ MeshRenderer:
   m_RenderingLayerMask: 257
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a199fcd009d6fb64e983a25e33e440d4, type: 2}
+  - {fileID: 2100000, guid: 5fd95d9f2c9473d409aee2ddbf2f961d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3782,7 +3782,7 @@ MonoBehaviour:
   magazineSize: 6
   currentAmmo: 6
   reserveAmmo: 36
-  reloadTime: 1.6
+  reloadTime: 1
   gunTransform: {fileID: 3291822798639344343}
   muzzlePoint: {fileID: 3387001166173865199}
   handsTransform: {fileID: 1322446348264100268}

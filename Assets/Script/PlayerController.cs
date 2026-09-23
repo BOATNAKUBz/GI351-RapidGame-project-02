@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float walkSpeed = 6f;
+    public float walkSpeed = 100f;
     public float jumpHeight = 1.3f;
     public float gravity = -20f;
 
@@ -121,7 +121,6 @@ public class PlayerController : MonoBehaviour
 
         transform.Rotate(Vector3.up * mouseDelta.x);
     }
-
     void HandleMovement()
     {
         isGrounded = controller.isGrounded;
@@ -130,12 +129,12 @@ public class PlayerController : MonoBehaviour
             velocity.y = -2f;
         }
 
-        float moveX = InputBridge.GetHorizontal();
-        float moveZ = InputBridge.GetVertical();
+        // ดึงค่าปุ่มกดสดๆ ไม่ผ่าน InputBridge
+        float moveX = Input.GetAxisRaw("Horizontal");
+        float moveZ = Input.GetAxisRaw("Vertical");
 
-        // เคลื่อนที่ด้วยความเร็ว walkSpeed แบบคงที่
-        Vector3 move = transform.right * moveX + transform.forward * moveZ;
-        controller.Move(move * walkSpeed * Time.deltaTime);
+        Vector3 moveInput = (transform.right * moveX + transform.forward * moveZ).normalized;
+        Vector3 moveVelocity = moveInput * walkSpeed;
 
         if (InputBridge.GetJumpDown() && isGrounded)
         {
@@ -143,7 +142,9 @@ public class PlayerController : MonoBehaviour
         }
 
         velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+
+        Vector3 finalMove = moveVelocity + Vector3.up * velocity.y;
+        controller.Move(finalMove * Time.deltaTime);
     }
 
     private void HandleDashInput()
