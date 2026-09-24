@@ -48,8 +48,6 @@ public class FPSPrototypeEditor : Editor
         // Configure PlayerController
         var playerCtrl = player.GetComponent<PlayerController>();
         if (playerCtrl == null) playerCtrl = player.AddComponent<PlayerController>();
-        playerCtrl.walkSpeed = 6.5f;
-        playerCtrl.sprintSpeed = 10.5f;
 
         // Configure PlayerHealth
         var playerHealth = player.GetComponent<PlayerHealth>();

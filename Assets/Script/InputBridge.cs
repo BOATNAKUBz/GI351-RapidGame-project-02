@@ -63,7 +63,25 @@ public static class InputBridge
         var kb = Keyboard.current;
         if (kb != null) return kb.leftShiftKey.isPressed || kb.rightShiftKey.isPressed;
 #endif
-        try { return Input.GetKey(KeyCode.LeftShift); } catch { return false; }
+        try { return Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift); } catch { return false; }
+    }
+
+    public static bool GetSprintDown()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = Keyboard.current;
+        if (kb != null) return kb.leftShiftKey.wasPressedThisFrame || kb.rightShiftKey.wasPressedThisFrame;
+#endif
+        try { return Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift); } catch { return false; }
+    }
+
+    public static bool GetDashDown()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = Keyboard.current;
+        if (kb != null) return kb.qKey.wasPressedThisFrame || kb.leftShiftKey.wasPressedThisFrame;
+#endif
+        try { return Input.GetKeyDown(KeyCode.Q) || Input.GetKeyDown(KeyCode.LeftShift); } catch { return false; }
     }
 
     public static bool GetFire()

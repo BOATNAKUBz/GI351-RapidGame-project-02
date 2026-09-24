@@ -1468,7 +1468,7 @@ Transform:
   m_GameObject: {fileID: 4210456550919471659}
   serializedVersion: 2
   m_LocalRotation: {x: 0.01745091, y: -0.013087603, z: 0.00022844494, w: 0.99976206}
-  m_LocalPosition: {x: 0.24, y: -0.22, z: 0.45}
+  m_LocalPosition: {x: 0.25, y: -0.23, z: 0.48}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1493,24 +1493,25 @@ MonoBehaviour:
   weaponName: Shotgun
   slotIndex: 0
   isUnlocked: 0
-  damage: 100
-  fireRate: 0.85
-  range: 50
+  damage: 22
+  fireRate: 0.82
+  range: 45
   isMelee: 0
-  pelletCount: 20
-  spreadAngle: 70
-  meleeRadius: 20
+  pelletCount: 9
+  spreadAngle: 3.8
+  meleeRadius: 0.65
+  knockbackForce: 15
   meleeTrail: {fileID: 0}
   magazineSize: 6
   currentAmmo: 6
   reserveAmmo: 24
-  reloadTime: 1
+  reloadTime: 2.2
   gunTransform: {fileID: 4901170902588712172}
   muzzlePoint: {fileID: 4601905272682718642}
   handsTransform: {fileID: 2806854547615556347}
   muzzleFlashLight: {fileID: 0}
-  recoilKickback: 0.12
-  recoilRotation: {x: -12, y: 2, z: -1.5}
+  recoilKickback: 0.13
+  recoilRotation: {x: -14, y: 1.5, z: -1}
   recoilReturnSpeed: 12
   swayAmount: 0.025
   maxSwayAmount: 0.06

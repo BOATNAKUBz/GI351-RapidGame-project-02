@@ -23,6 +23,7 @@ public class PlayerInventory : MonoBehaviour
     private bool isSwitching = false;
     private Camera playerCamera;
     private WeaponPickup currentTargetPickup = null;
+    private bool isPromptShowing = false;
 
     void Awake()
     {
@@ -125,7 +126,11 @@ public class PlayerInventory : MonoBehaviour
         WeaponPickup detected = null;
         if (Physics.Raycast(ray, out hit, pickupDistance, pickupLayer, QueryTriggerInteraction.Collide))
         {
-            detected = hit.collider.GetComponentInParent<WeaponPickup>();
+            var p = hit.collider.GetComponentInParent<WeaponPickup>();
+            if (p != null && !p.isCollected && p.gameObject.activeInHierarchy)
+            {
+                detected = p;
+            }
         }
 
         // Sphere overlap fallback if player is close looking near it
@@ -135,7 +140,7 @@ public class PlayerInventory : MonoBehaviour
             foreach (var col in cols)
             {
                 var p = col.GetComponentInParent<WeaponPickup>();
-                if (p != null)
+                if (p != null && !p.isCollected && p.gameObject.activeInHierarchy)
                 {
                     detected = p;
                     break;
@@ -143,15 +148,21 @@ public class PlayerInventory : MonoBehaviour
             }
         }
 
-        if (currentTargetPickup != detected)
+        if (detected != null)
         {
-            currentTargetPickup = detected;
-            if (currentTargetPickup != null)
+            if (currentTargetPickup != detected || !isPromptShowing)
             {
-                GameUIManager.Instance?.ShowInteractPrompt($"Press [E] to pick up {currentTargetPickup.weaponName}");
+                currentTargetPickup = detected;
+                isPromptShowing = true;
+                GameUIManager.Instance?.ShowInteractPrompt($"Press [E] to pick up {detected.weaponName}");
             }
-            else
+        }
+        else
+        {
+            currentTargetPickup = null;
+            if (isPromptShowing)
             {
+                isPromptShowing = false;
                 GameUIManager.Instance?.HideInteractPrompt();
             }
         }
@@ -159,7 +170,7 @@ public class PlayerInventory : MonoBehaviour
 
     void TryPickupTarget()
     {
-        if (currentTargetPickup != null)
+        if (currentTargetPickup != null && !currentTargetPickup.isCollected)
         {
             WeaponType type = currentTargetPickup.weaponType;
             string wName = currentTargetPickup.weaponName;
@@ -172,8 +183,30 @@ public class PlayerInventory : MonoBehaviour
             SoundManager.Instance?.PlayWeaponPickup();
             GameUIManager.Instance?.ShowPickupBanner($"Picked up {wName}!");
 
-            currentTargetPickup.Collect();
+            WeaponPickup toCollect = currentTargetPickup;
             currentTargetPickup = null;
+            isPromptShowing = false;
+            GameUIManager.Instance?.HideInteractPrompt();
+
+            toCollect.Collect();
+        }
+        else
+        {
+            currentTargetPickup = null;
+            if (isPromptShowing)
+            {
+                isPromptShowing = false;
+                GameUIManager.Instance?.HideInteractPrompt();
+            }
+        }
+    }
+
+    void OnDisable()
+    {
+        currentTargetPickup = null;
+        if (isPromptShowing)
+        {
+            isPromptShowing = false;
             GameUIManager.Instance?.HideInteractPrompt();
         }
     }

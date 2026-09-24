@@ -1256,7 +1256,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 40
   currentHealth: 35
-  customDisplayName: 
+  customDisplayName: Chicken
 --- !u!136 &7158691751897951106
 CapsuleCollider:
   m_ObjectHideFlags: 0

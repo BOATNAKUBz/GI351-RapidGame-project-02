@@ -6,7 +6,8 @@ public enum EnemyType
     Swarmer, // Small, fast, low HP
     Grunt,   // Balanced humanoid zombie
     Tank,    // Huge, high HP, slow, high damage
-    Elite    // Fast, glowing assassin/stalker
+    Elite,   // Fast, glowing assassin/stalker
+    Zombie   // Classic undead zombie
 }
 
 [System.Serializable]
@@ -28,6 +29,22 @@ public class EnemyStats
     {
         switch (type)
         {
+            case EnemyType.Zombie:
+                return new EnemyStats
+                {
+                    type = EnemyType.Zombie,
+                    displayName = "Zombie Walker",
+                    maxHealth = 65f,
+                    moveSpeed = 3.2f,
+                    damage = 14f,
+                    attackCooldown = 1.1f,
+                    attackRange = 1.5f,
+                    modelScale = 1.0f,
+                    primaryColor = new Color(0.32f, 0.48f, 0.3f), // Decaying Olive Green
+                    emissionColor = new Color(0.9f, 0.2f, 0.1f) * 2f, // Bloody Red Eyes
+                    dropChance = 0.5f
+                };
+
             case EnemyType.Swarmer:
                 return new EnemyStats
                 {

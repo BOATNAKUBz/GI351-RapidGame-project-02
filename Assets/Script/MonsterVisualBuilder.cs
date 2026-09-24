@@ -45,6 +45,9 @@ public static class MonsterVisualBuilder
 
         switch (stats.type)
         {
+            case EnemyType.Zombie:
+                BuildZombie(visualContainer, bodyMat, glowMat);
+                break;
             case EnemyType.Swarmer:
                 BuildSwarmer(visualContainer, bodyMat, glowMat);
                 break;
@@ -83,6 +86,48 @@ public static class MonsterVisualBuilder
 
         // Back Spikes
         CreatePart(parent.transform, PrimitiveType.Cylinder, new Vector3(0, 0.75f, -0.1f), new Vector3(0.08f, 0.22f, 0.08f), Quaternion.Euler(-30f, 0, 0), glowMat);
+    }
+
+    private static void BuildZombie(GameObject parent, Material bodyMat, Material glowMat)
+    {
+        // Hunched decaying torso (leaning forward)
+        GameObject torso = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        torso.name = "Zombie_Torso";
+        torso.transform.SetParent(parent.transform, false);
+        torso.transform.localPosition = new Vector3(0, 1.05f, 0.08f);
+        torso.transform.localRotation = Quaternion.Euler(14f, 0, 0);
+        torso.transform.localScale = new Vector3(0.55f, 0.75f, 0.4f);
+        torso.GetComponent<Renderer>().sharedMaterial = bodyMat;
+        Object.Destroy(torso.GetComponent<Collider>());
+
+        // Skull / Head
+        GameObject head = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        head.name = "Zombie_Head";
+        head.transform.SetParent(parent.transform, false);
+        head.transform.localPosition = new Vector3(0, 1.82f, 0.22f);
+        head.transform.localRotation = Quaternion.Euler(18f, 5f, 0);
+        head.transform.localScale = new Vector3(0.38f, 0.38f, 0.38f);
+        head.GetComponent<Renderer>().sharedMaterial = bodyMat;
+        Object.Destroy(head.GetComponent<Collider>());
+
+        // Glowing red zombie eyes
+        CreateEye(parent.transform, new Vector3(0.1f, 1.88f, 0.42f), new Vector3(0.08f, 0.08f, 0.08f), glowMat);
+        CreateEye(parent.transform, new Vector3(-0.1f, 1.88f, 0.42f), new Vector3(0.08f, 0.08f, 0.08f), glowMat);
+
+        // Open jaw / Mouth
+        CreatePart(parent.transform, PrimitiveType.Cube, new Vector3(0, 1.7f, 0.38f), new Vector3(0.24f, 0.08f, 0.22f), Quaternion.Euler(25f, 0, 0), glowMat);
+
+        // Outstretched Zombie Arms reaching forward!
+        CreatePart(parent.transform, PrimitiveType.Cube, new Vector3(0.42f, 1.35f, 0.48f), new Vector3(0.14f, 0.14f, 0.75f), Quaternion.Euler(-18f, -6f, 0), bodyMat);
+        CreatePart(parent.transform, PrimitiveType.Cube, new Vector3(-0.42f, 1.32f, 0.48f), new Vector3(0.14f, 0.14f, 0.75f), Quaternion.Euler(-14f, 8f, 0), bodyMat);
+
+        // Claws/Hands
+        CreatePart(parent.transform, PrimitiveType.Cube, new Vector3(0.42f, 1.35f, 0.88f), new Vector3(0.12f, 0.18f, 0.12f), Quaternion.identity, glowMat);
+        CreatePart(parent.transform, PrimitiveType.Cube, new Vector3(-0.42f, 1.32f, 0.88f), new Vector3(0.12f, 0.18f, 0.12f), Quaternion.identity, glowMat);
+
+        // Legs
+        CreatePart(parent.transform, PrimitiveType.Cylinder, new Vector3(0.2f, 0.42f, -0.02f), new Vector3(0.16f, 0.42f, 0.16f), Quaternion.Euler(5f, 0, -4f), bodyMat);
+        CreatePart(parent.transform, PrimitiveType.Cylinder, new Vector3(-0.2f, 0.42f, -0.02f), new Vector3(0.16f, 0.42f, 0.16f), Quaternion.Euler(-5f, 0, 4f), bodyMat);
     }
 
     private static void BuildGrunt(GameObject parent, Material bodyMat, Material glowMat)

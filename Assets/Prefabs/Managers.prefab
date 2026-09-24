@@ -93,27 +93,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
   wavesConfigList:
-  - waveTitle: 1
+  - waveTitle: 'Wave 1: Undead Outbreak'
     enemies:
     - enemyPrefab: {fileID: 1669965196625898662, guid: 398bc1741d2b5124c80d94af5af54589, type: 3}
-      count: 10
+      count: 6
+    - enemyPrefab: {fileID: 8073493621716670513, guid: f6afd625f44be084ba6fd3f169856d6f, type: 3}
+      count: 4
     spawnInterval: 1
-  - waveTitle: 2
+  - waveTitle: 'Wave 2: Raptor & Zombie Hunt'
     enemies:
     - enemyPrefab: {fileID: 1669965196625898662, guid: 398bc1741d2b5124c80d94af5af54589, type: 3}
-      count: 10
-    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
-      count: 5
-    spawnInterval: 2
-  - waveTitle: 3
-    enemies:
+      count: 6
+    - enemyPrefab: {fileID: 8073493621716670513, guid: f6afd625f44be084ba6fd3f169856d6f, type: 3}
+      count: 8
     - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
       count: 3
-    - enemyPrefab: {fileID: 1669965196625898662, guid: 398bc1741d2b5124c80d94af5af54589, type: 3}
-      count: 10
+    spawnInterval: 1.2
+  - waveTitle: 'Wave 3: Horde Carnage'
+    enemies:
+    - enemyPrefab: {fileID: 8073493621716670513, guid: f6afd625f44be084ba6fd3f169856d6f, type: 3}
+      count: 12
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      count: 5
+    - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
+      count: 1
+    spawnInterval: 1.5
+  - waveTitle: 'Wave 4: Zombie Apocalypse'
+    enemies:
+    - enemyPrefab: {fileID: 8073493621716670513, guid: f6afd625f44be084ba6fd3f169856d6f, type: 3}
+      count: 18
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      count: 6
     - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
       count: 2
-    spawnInterval: 2
+    spawnInterval: 1.2
   spawnPoints:
   - {fileID: 0}
   - {fileID: 0}

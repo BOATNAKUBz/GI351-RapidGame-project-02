@@ -790,6 +790,7 @@ public class GameUIManager : MonoBehaviour
     {
         if (interactPromptText != null)
         {
+            interactPromptText.text = "";
             interactPromptText.gameObject.SetActive(false);
         }
     }

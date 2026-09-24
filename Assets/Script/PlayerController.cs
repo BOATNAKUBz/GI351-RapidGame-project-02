@@ -5,7 +5,8 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float walkSpeed = 100f;
+    public float walkSpeed = 6.5f;
+    public float sprintSpeed = 10.5f;
     public float jumpHeight = 1.3f;
     public float gravity = -20f;
 
@@ -65,6 +66,7 @@ public class PlayerController : MonoBehaviour
                 cameraTransform.SetParent(transform);
                 cameraTransform.localPosition = new Vector3(0, 1.6f, 0); // Eye level
                 cameraTransform.localRotation = Quaternion.identity;
+                cam.nearClipPlane = 0.03f; // Prevent first-person weapon model from clipping
 
                 // Remove legacy follow scripts if attached
                 var oldFollow = cam.GetComponent("CameraFollow");
@@ -129,12 +131,33 @@ public class PlayerController : MonoBehaviour
             velocity.y = -2f;
         }
 
-        // ดึงค่าปุ่มกดสดๆ ไม่ผ่าน InputBridge
-        float moveX = Input.GetAxisRaw("Horizontal");
-        float moveZ = Input.GetAxisRaw("Vertical");
+        // Support both New Input System and legacy Input Manager reliably
+        float moveX = InputBridge.GetHorizontal();
+        float moveZ = InputBridge.GetVertical();
+        if (Mathf.Approximately(moveX, 0f) && Mathf.Approximately(moveZ, 0f))
+        {
+            try
+            {
+                moveX = Input.GetAxisRaw("Horizontal");
+                moveZ = Input.GetAxisRaw("Vertical");
+            }
+            catch { }
+        }
 
-        Vector3 moveInput = (transform.right * moveX + transform.forward * moveZ).normalized;
-        Vector3 moveVelocity = moveInput * walkSpeed;
+        Vector3 moveInput = transform.right * moveX + transform.forward * moveZ;
+        if (moveInput.sqrMagnitude > 1f)
+        {
+            moveInput.Normalize();
+        }
+
+        // Sprinting when holding Sprint (Left Shift)
+        float currentSpeed = walkSpeed;
+        if (InputBridge.GetSprint() && isGrounded && moveInput.sqrMagnitude > 0.01f)
+        {
+            currentSpeed = Mathf.Max(sprintSpeed, walkSpeed * 1.5f);
+        }
+
+        Vector3 moveVelocity = moveInput * currentSpeed;
 
         if (InputBridge.GetJumpDown() && isGrounded)
         {
@@ -149,8 +172,8 @@ public class PlayerController : MonoBehaviour
 
     private void HandleDashInput()
     {
-        // กด Left Shift เพื่อ Dash
-        if (Input.GetKeyDown(KeyCode.LeftShift) && dashCooldownRemaining <= 0f)
+        // Dash with Q key or SprintDown (Shift) with cooldown
+        if ((Input.GetKeyDown(KeyCode.Q) || InputBridge.GetDashDown()) && dashCooldownRemaining <= 0f)
         {
             StartCoroutine(PerformDash());
         }

@@ -185,8 +185,8 @@ public static class SetupWeaponsAndPlayer
     {
         GameObject wObj = new GameObject("Weapon_Shotgun");
         wObj.transform.SetParent(parent, false);
-        wObj.transform.localPosition = new Vector3(0.24f, -0.22f, 0.45f);
-        wObj.transform.localRotation = Quaternion.Euler(2f, -1.5f, 0f);
+        wObj.transform.localPosition = new Vector3(0.25f, -0.23f, 0.48f);
+        wObj.transform.localRotation = Quaternion.Euler(1.5f, -1f, 0f);
 
         GameObject modelPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ShotgunPrefabPath);
         GameObject gunVisual;
@@ -223,11 +223,11 @@ public static class SetupWeaponsAndPlayer
         weapon.weaponName = "Shotgun";
         weapon.slotIndex = 0;
         weapon.isUnlocked = false; // Starts locked, pick up with 'E'!
-        weapon.damage = 18f;
-        weapon.pelletCount = 8;
-        weapon.spreadAngle = 4.2f;
-        weapon.fireRate = 0.85f;
-        weapon.range = 50f;
+        weapon.damage = 22f; // CS2 shotgun: 22 dmg x 9 pellets = 198 point-blank burst!
+        weapon.pelletCount = 9;
+        weapon.spreadAngle = 3.8f;
+        weapon.fireRate = 0.82f;
+        weapon.range = 45f;
         weapon.magazineSize = 6;
         weapon.currentAmmo = 6;
         weapon.reserveAmmo = 24;
@@ -235,8 +235,8 @@ public static class SetupWeaponsAndPlayer
         weapon.gunTransform = wObj.transform;
         weapon.muzzlePoint = muzzle.transform;
         weapon.handsTransform = handsRoot.transform;
-        weapon.recoilKickback = 0.12f;
-        weapon.recoilRotation = new Vector3(-12f, 2f, -1.5f);
+        weapon.recoilKickback = 0.13f;
+        weapon.recoilRotation = new Vector3(-14f, 1.5f, -1f);
 
         return weapon;
     }

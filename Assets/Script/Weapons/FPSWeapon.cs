@@ -29,6 +29,7 @@ public class FPSWeapon : MonoBehaviour
 
     [Header("Axe / Melee Settings")]
     public float meleeRadius = 0.65f;
+    public float knockbackForce = 15f;
     public TrailRenderer meleeTrail;
 
     [Header("Ammunition")]
@@ -85,6 +86,10 @@ public class FPSWeapon : MonoBehaviour
         initialLocalRot = gunTransform.localRotation;
 
         playerCam = Camera.main ?? GetComponentInParent<Camera>();
+        if (playerCam != null)
+        {
+            playerCam.nearClipPlane = 0.03f; // Prevent first-person weapon model from clipping
+        }
         playerCC = GetComponentInParent<CharacterController>();
 
         SetupVisuals();
@@ -177,7 +182,7 @@ public class FPSWeapon : MonoBehaviour
         // Setup Tracer LineRenderers
         if (!isMelee)
         {
-            int poolCount = (weaponType == WeaponType.Shotgun) ? 12 : 3;
+            int poolCount = (weaponType == WeaponType.Shotgun) ? 18 : 6;
             tracerPool = new LineRenderer[poolCount];
             for (int i = 0; i < poolCount; i++)
             {
@@ -330,47 +335,72 @@ public class FPSWeapon : MonoBehaviour
     }
     #endregion
 
-    #region Shotgun Attack
+    #region Shotgun Attack (CS2 Style)
+    // CS2 9-Pellet Fixed Geometric Spread Pattern (Nova/MAG-7/XM1014 style)
+    // Pellet 0: Dead Center (100% accurate on crosshair)
+    // Pellets 1-5: Outer Ring
+    // Pellets 6-8: Inner Ring
+    private static readonly Vector2[] CS2_PELLET_PATTERN = new Vector2[]
+    {
+        Vector2.zero,                     // 0: Dead Center (ตรงเป้ากากบาท 100%)
+        new Vector2(0.00f, 0.95f),        // 1: บน
+        new Vector2(0.90f, 0.31f),        // 2: ขวาบน
+        new Vector2(0.56f, -0.77f),       // 3: ขวาล่าง
+        new Vector2(-0.56f, -0.77f),      // 4: ซ้ายล่าง
+        new Vector2(-0.90f, 0.31f),       // 5: ซ้ายบน
+        new Vector2(0.38f, 0.38f),        // 6: วงใน ขวาบน
+        new Vector2(-0.38f, 0.38f),       // 7: วงใน ซ้ายบน
+        new Vector2(0.00f, -0.48f)        // 8: วงใน ล่าง
+    };
+
     private IEnumerator ShotgunShootRoutine()
     {
         IsAttacking = true;
         SoundManager.Instance?.PlayShotgunShoot();
 
-        // Heavy Recoil Kick
-        ApplyRecoil(recoilKickback, recoilRotation);
+        // Punchy CS2 Recoil Kickback
+        ApplyRecoil(recoilKickback > 0 ? recoilKickback : 0.12f, recoilRotation != Vector3.zero ? recoilRotation : new Vector3(-14f, 1.5f, -1f));
         if (muzzleFlashLight != null) StartCoroutine(FlashLightRoutine());
 
-        // Multi-pellet spread
-        int pellets = Mathf.Max(pelletCount, 8);
-        for (int i = 0; i < pellets; i++)
-        {
-            FireRaycast(spreadAngle > 0 ? spreadAngle : 4.5f);
-        }
+        // CS2 Shotgun blast: ยิง 9 เม็ดตาม Pattern ของ CS2 และไม่ทะลุ
+        FireCS2ShotgunBlast();
 
-        // Heavy Kickback Phase (0.1s)
+        // CS2 Snappy Kickback Phase (0.07s)
         float elapsed = 0f;
-        Vector3 kickPos = initialLocalPos - new Vector3(0, -0.02f, recoilKickback);
+        Vector3 kickPos = initialLocalPos - new Vector3(0, -0.015f, recoilKickback);
         Quaternion kickRot = initialLocalRot * Quaternion.Euler(recoilRotation);
-        while (elapsed < 0.12f)
+
+        while (elapsed < 0.07f)
         {
             elapsed += Time.deltaTime;
-            gunTransform.localPosition = Vector3.Lerp(gunTransform.localPosition, kickPos, elapsed / 0.12f);
-            gunTransform.localRotation = Quaternion.Slerp(gunTransform.localRotation, kickRot, elapsed / 0.12f);
+            gunTransform.localPosition = Vector3.Lerp(gunTransform.localPosition, kickPos, elapsed / 0.07f);
+            gunTransform.localRotation = Quaternion.Slerp(gunTransform.localRotation, kickRot, elapsed / 0.07f);
             yield return null;
         }
 
-        yield return new WaitForSeconds(0.1f);
+        // Return slightly before pump
+        float returnT = 0f;
+        while (returnT < 0.07f)
+        {
+            returnT += Time.deltaTime;
+            gunTransform.localPosition = Vector3.Lerp(kickPos, initialLocalPos, returnT / 0.07f);
+            gunTransform.localRotation = Quaternion.Slerp(kickRot, initialLocalRot, returnT / 0.07f);
+            yield return null;
+        }
 
-        // Realistic Pump-Action Animation & Sound
+        yield return new WaitForSeconds(0.06f);
+
+        // CS2 Pump-Action Stroke & Sound
         SoundManager.Instance?.PlayShotgunPump();
-        Vector3 pumpBackPos = initialLocalPos + new Vector3(0, -0.035f, -0.05f);
-        Quaternion pumpRot = initialLocalRot * Quaternion.Euler(3f, -2f, 1f);
+        Vector3 pumpBackPos = initialLocalPos + new Vector3(0, -0.025f, -0.055f);
+        Quaternion pumpRot = initialLocalRot * Quaternion.Euler(3.5f, -2f, 1f);
 
         float p = 0f;
-        while (p < 0.18f)
+        float pumpDuration = 0.2f;
+        while (p < pumpDuration)
         {
             p += Time.deltaTime;
-            float factor = Mathf.PingPong(p * 2f, 0.18f) / 0.18f;
+            float factor = Mathf.PingPong(p * 2f, pumpDuration) / pumpDuration;
             gunTransform.localPosition = Vector3.Lerp(initialLocalPos, pumpBackPos, factor);
             gunTransform.localRotation = Quaternion.Slerp(initialLocalRot, pumpRot, factor);
             yield return null;
@@ -379,6 +409,92 @@ public class FPSWeapon : MonoBehaviour
         gunTransform.localPosition = initialLocalPos;
         gunTransform.localRotation = initialLocalRot;
         IsAttacking = false;
+    }
+
+    private void FireCS2ShotgunBlast()
+    {
+        if (playerCam == null) playerCam = Camera.main;
+        Vector3 origin = playerCam != null ? playerCam.transform.position : transform.position;
+        Vector3 forward = playerCam != null ? playerCam.transform.forward : transform.forward;
+        Vector3 right = playerCam != null ? playerCam.transform.right : transform.right;
+        Vector3 up = playerCam != null ? playerCam.transform.up : transform.up;
+
+        float spreadRad = (spreadAngle > 0f ? spreadAngle : 3.8f) * Mathf.Deg2Rad;
+
+        for (int i = 0; i < CS2_PELLET_PATTERN.Length; i++)
+        {
+            Vector2 patternOffset = CS2_PELLET_PATTERN[i];
+
+            // เม็ดแรก (0) จะอยู่ตรงกลางเป้าพอดีเสมอ (CS2 First Pellet Accuracy)
+            // เม็ดอื่นจะมีการแกว่งเล็กน้อยตามระยะ
+            if (i > 0)
+            {
+                patternOffset += new Vector2(UnityEngine.Random.Range(-0.08f, 0.08f), UnityEngine.Random.Range(-0.08f, 0.08f));
+            }
+
+            Vector3 pelletDir = (forward + (right * patternOffset.x + up * patternOffset.y) * spreadRad).normalized;
+            FireSinglePelletNoPenetration(origin, pelletDir);
+        }
+    }
+
+    private void FireSinglePelletNoPenetration(Vector3 origin, Vector3 dir)
+    {
+        Vector3 hitPoint = origin + dir * range;
+
+        // ใช้ Raycast / SphereCast ขนาดกะทัดรัด (0.06m) เพื่อความคมชัดแบบ CS2
+        RaycastHit[] hits = Physics.SphereCastAll(origin, 0.06f, dir, range, ~0, QueryTriggerInteraction.Ignore);
+
+        if (hits != null && hits.Length > 0)
+        {
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            for (int i = 0; i < hits.Length; i++)
+            {
+                RaycastHit hit = hits[i];
+                if (hit.collider == null) continue;
+
+                // ข้ามตัวผู้เล่นเองและ Trigger
+                if (hit.collider.CompareTag("Player") || hit.collider.transform.root == transform.root) continue;
+                if (hit.collider.isTrigger) continue;
+
+                EnemyHealth eh = hit.collider.GetComponentInParent<EnemyHealth>();
+                if (eh != null && eh.currentHealth > 0)
+                {
+                    // CS2 Shotgun Damage Falloff: ยิ่งใกล้ยิ่งแรง ระยะไกลแดมเมจลดลง
+                    float dist = hit.distance;
+                    float falloff = Mathf.Clamp(1f - (dist / range) * 0.55f, 0.35f, 1f);
+                    float finalDmg = damage * falloff;
+
+                    eh.TakeDamage(finalDmg);
+                    SoundManager.Instance?.PlayHitMarker();
+                    GameUIManager.Instance?.ShowHitMarker();
+                    SpawnImpactEffect(hit.point, hit.normal, true);
+
+                    // แรงกระแทกหยุดศัตรูเล็กน้อย
+                    EnemyAI ai = hit.collider.GetComponentInParent<EnemyAI>();
+                    if (ai != null)
+                    {
+                        Vector3 kbDir = dir;
+                        kbDir.y = 0.08f;
+                        ai.ApplyKnockback(kbDir.normalized, 2.5f, 0.12f);
+                    }
+
+                    hitPoint = hit.point;
+
+                    // ไม่ทะลุ: เมื่อชนศัตรูตัวแรก เม็ดกระสุนนี้จะหยุดทันที ไม่ทะลุไปโดนตัวข้างหลัง
+                    break;
+                }
+                else
+                {
+                    // ชนกำแพง/สิ่งกีดขวาง: หยุดทันที ไม่ทะลุฉาก
+                    hitPoint = hit.point;
+                    SpawnImpactEffect(hit.point, hit.normal, false);
+                    break;
+                }
+            }
+        }
+
+        ShowTracer(hitPoint);
     }
     #endregion
 
@@ -443,13 +559,14 @@ public class FPSWeapon : MonoBehaviour
         Vector3 origin = playerCam != null ? playerCam.transform.position : transform.position;
         Vector3 forward = playerCam != null ? playerCam.transform.forward : transform.forward;
 
-        float attackDist = Mathf.Min(range, 2.5f);
+        float attackDist = Mathf.Min(range, 2.8f);
         RaycastHit[] hits = Physics.SphereCastAll(origin, meleeRadius, forward, attackDist);
         bool hitAnyEnemy = false;
 
         foreach (var hit in hits)
         {
-            if (hit.collider.CompareTag("Player")) continue;
+            if (hit.collider == null) continue;
+            if (hit.collider.CompareTag("Player") || hit.collider.transform.root == transform.root) continue;
 
             EnemyHealth eh = hit.collider.GetComponentInParent<EnemyHealth>();
             if (eh != null && eh.currentHealth > 0)
@@ -457,6 +574,17 @@ public class FPSWeapon : MonoBehaviour
                 eh.TakeDamage(damage);
                 hitAnyEnemy = true;
                 SpawnImpactEffect(hit.point, hit.normal, true);
+
+                // KNOCK BACK: พุ่งศัตรูกระเด็นถอยหลังตามแรงขวาน
+                EnemyAI ai = hit.collider.GetComponentInParent<EnemyAI>();
+                if (ai != null)
+                {
+                    Vector3 pushDir = (ai.transform.position - origin);
+                    pushDir.y = 0;
+                    if (pushDir == Vector3.zero) pushDir = forward;
+                    pushDir.y = 0.25f; // ยกขึ้นเล็กน้อยให้ดูมีน้ำหนัก
+                    ai.ApplyKnockback(pushDir.normalized, knockbackForce > 0f ? knockbackForce : 15f, 0.45f);
+                }
             }
         }
 
@@ -491,23 +619,49 @@ public class FPSWeapon : MonoBehaviour
         }
 
         Vector3 hitPoint = origin + dir * range;
-        RaycastHit hit;
 
-        if (Physics.Raycast(origin, dir, out hit, range, ~0, QueryTriggerInteraction.Ignore))
+        // ใช้ SphereCastAll ที่มีความหนา เพื่อแก้ปัญหากระสุนทะลุตัวศัตรูตัวเล็กหรือระยะประชิด
+        float castRadius = (weaponType == WeaponType.Shotgun) ? 0.14f : 0.04f;
+        RaycastHit[] hits = Physics.SphereCastAll(origin, castRadius, dir, range, ~0, QueryTriggerInteraction.Ignore);
+
+        if (hits != null && hits.Length > 0)
         {
-            hitPoint = hit.point;
+            // เรียงลำดับจากใกล้ไปไกล
+            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-            EnemyHealth eh = hit.collider.GetComponentInParent<EnemyHealth>();
-            if (eh != null && eh.currentHealth > 0)
+            int enemiesPierced = 0;
+            // ลูกซองทะลุศัตรูได้ 2 ตัว ส่วนปืนลูกโม่ทะลุ 1 ตัว
+            int maxPierce = (weaponType == WeaponType.Shotgun) ? 2 : 1;
+            System.Collections.Generic.HashSet<EnemyHealth> damagedEnemies = new System.Collections.Generic.HashSet<EnemyHealth>();
+
+            for (int i = 0; i < hits.Length; i++)
             {
-                eh.TakeDamage(damage);
-                SoundManager.Instance?.PlayHitMarker();
-                GameUIManager.Instance?.ShowHitMarker();
-                SpawnImpactEffect(hit.point, hit.normal, true);
-            }
-            else
-            {
-                SpawnImpactEffect(hit.point, hit.normal, false);
+                RaycastHit hit = hits[i];
+                if (hit.collider == null) continue;
+
+                // ข้ามตัวผู้เล่นเองและ Trigger
+                if (hit.collider.CompareTag("Player") || hit.collider.transform.root == transform.root) continue;
+                if (hit.collider.isTrigger) continue;
+
+                EnemyHealth eh = hit.collider.GetComponentInParent<EnemyHealth>();
+                if (eh != null && eh.currentHealth > 0)
+                {
+                    eh.TakeDamage(damage);
+                    SoundManager.Instance?.PlayHitMarker();
+                    GameUIManager.Instance?.ShowHitMarker();
+                    SpawnImpactEffect(hit.point, hit.normal, true);
+
+                    hitPoint = hit.point;
+                    // หยุดกระสุนทันที ไม่ทะลุ
+                    break;
+                }
+                else
+                {
+                    // ชนกำแพง/พื้น/สิ่งกีดขวาง: หยุดกระสุนทันที ไม่ทะลุกำแพง!
+                    hitPoint = hit.point;
+                    SpawnImpactEffect(hit.point, hit.normal, false);
+                    break;
+                }
             }
         }
 
