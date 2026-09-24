@@ -26,15 +26,16 @@ public class RaptorAI : EnemyAI
         agent = GetComponent<NavMeshAgent>();
         if (agent != null)
         {
-            if (!agent.isOnNavMesh)
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 1.5f, NavMesh.AllAreas))
             {
-                agent.enabled = false; // ปิดถ้าไม่มี NavMesh เพื่อป้องกันการขัดแย้งกับ transform.position
-            }
-            else
-            {
+                agent.enabled = true;
                 agent.speed = moveSpeed;
                 agent.stoppingDistance = stoppingDistance;
                 agent.updateRotation = false; // ปิดเพื่อให้เราคุมการหมุนกลับด้าน 180 องศาได้เอง
+            }
+            else
+            {
+                agent.enabled = false; // ปิดถ้าไม่มี NavMesh เพื่อป้องกันการขัดแย้งกับ transform.position
             }
         }
 

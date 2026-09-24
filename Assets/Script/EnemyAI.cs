@@ -57,11 +57,18 @@ public class EnemyAI : MonoBehaviour
         // 2. ดึง Component Animator (ถ้ามี)
         animator = GetComponent<Animator>();
 
-        // 3. ตรวจสอบ NavMeshAgent
+        // 3. ตรวจสอบ NavMeshAgent อย่างปลอดภัย
         var navAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        if (navAgent != null && !navAgent.isOnNavMesh)
+        if (navAgent != null)
         {
-            navAgent.enabled = false;
+            if (UnityEngine.AI.NavMesh.SamplePosition(transform.position, out UnityEngine.AI.NavMeshHit hit, 1.5f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                navAgent.enabled = true;
+            }
+            else
+            {
+                navAgent.enabled = false;
+            }
         }
 
         // 4. ติดพื้นทันทีตอนเกิด
@@ -271,9 +278,9 @@ public class EnemyAI : MonoBehaviour
         {
             nextAttackTime = Time.time + attackCooldown;
 
-            if (animator != null)
+            if (animator != null && HasAnimatorParameter(animator, "Attack"))
             {
-                try { animator.SetTrigger("Attack"); } catch { }
+                animator.SetTrigger("Attack");
             }
 
             if (player != null)
@@ -298,5 +305,15 @@ public class EnemyAI : MonoBehaviour
         {
             Instantiate(dropItemPrefab, transform.position + Vector3.up * 0.5f, Quaternion.identity);
         }
+    }
+
+    protected bool HasAnimatorParameter(Animator anim, string paramName)
+    {
+        if (anim == null || anim.runtimeAnimatorController == null) return false;
+        foreach (var param in anim.parameters)
+        {
+            if (param.name == paramName) return true;
+        }
+        return false;
     }
 }

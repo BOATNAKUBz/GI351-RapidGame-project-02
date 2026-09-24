@@ -576,27 +576,15 @@ public static class SetupWeaponsAndPlayer
         bgOutline.effectColor = new Color(0.25f, 0.35f, 0.45f, 0.85f);
         bgOutline.effectDistance = new Vector2(2f, -2f);
 
-        // 3. Heart / Medical Cross Icon
+        // 3. Heart Icon
         GameObject iconObj = new GameObject("HP_Icon");
         iconObj.transform.SetParent(hpPanel.transform, false);
         RectTransform iconRt = iconObj.AddComponent<RectTransform>();
         iconRt.anchorMin = new Vector2(0, 0.5f);
         iconRt.anchorMax = new Vector2(0, 0.5f);
-        iconRt.pivot = new Vector2(0, 0.5f);
-        iconRt.anchoredPosition = new Vector2(10, 0);
-        iconRt.sizeDelta = new Vector2(30, 30);
-
-        Text iconTxt = iconObj.AddComponent<Text>();
-        iconTxt.font = defaultFont;
-        iconTxt.text = "+";
-        iconTxt.fontSize = 28;
-        iconTxt.fontStyle = FontStyle.Bold;
-        iconTxt.alignment = TextAnchor.MiddleCenter;
-        iconTxt.color = new Color(0.2f, 0.92f, 0.4f);
-
-        Outline iconOutline = iconObj.AddComponent<Outline>();
-        iconOutline.effectColor = new Color(0, 0, 0, 0.9f);
-        iconOutline.effectDistance = new Vector2(1f, -1f);
+        iconRt.pivot = new Vector2(0.5f, 0.5f);
+        iconRt.anchoredPosition = new Vector2(24, 0);
+        iconRt.sizeDelta = new Vector2(34, 34);
 
         // 4. Track Background for Slider
         GameObject trackObj = new GameObject("HP_Track");

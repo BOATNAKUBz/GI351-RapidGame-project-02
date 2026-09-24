@@ -465,10 +465,9 @@ public class FPSWeapon : MonoBehaviour
                     float falloff = Mathf.Clamp(1f - (dist / range) * 0.55f, 0.35f, 1f);
                     float finalDmg = damage * falloff;
 
-                    eh.TakeDamage(finalDmg);
+                    eh.TakeDamage(finalDmg, hit.point, hit.normal);
                     SoundManager.Instance?.PlayHitMarker();
                     GameUIManager.Instance?.ShowHitMarker();
-                    SpawnImpactEffect(hit.point, hit.normal, true);
 
                     // แรงกระแทกหยุดศัตรูเล็กน้อย
                     EnemyAI ai = hit.collider.GetComponentInParent<EnemyAI>();
@@ -571,9 +570,8 @@ public class FPSWeapon : MonoBehaviour
             EnemyHealth eh = hit.collider.GetComponentInParent<EnemyHealth>();
             if (eh != null && eh.currentHealth > 0)
             {
-                eh.TakeDamage(damage);
+                eh.TakeDamage(damage, hit.point, hit.normal);
                 hitAnyEnemy = true;
-                SpawnImpactEffect(hit.point, hit.normal, true);
 
                 // KNOCK BACK: พุ่งศัตรูกระเด็นถอยหลังตามแรงขวาน
                 EnemyAI ai = hit.collider.GetComponentInParent<EnemyAI>();
@@ -646,10 +644,9 @@ public class FPSWeapon : MonoBehaviour
                 EnemyHealth eh = hit.collider.GetComponentInParent<EnemyHealth>();
                 if (eh != null && eh.currentHealth > 0)
                 {
-                    eh.TakeDamage(damage);
+                    eh.TakeDamage(damage, hit.point, hit.normal);
                     SoundManager.Instance?.PlayHitMarker();
                     GameUIManager.Instance?.ShowHitMarker();
-                    SpawnImpactEffect(hit.point, hit.normal, true);
 
                     hitPoint = hit.point;
                     // หยุดกระสุนทันที ไม่ทะลุ
@@ -699,12 +696,14 @@ public class FPSWeapon : MonoBehaviour
 
     private void SpawnImpactEffect(Vector3 pos, Vector3 normal, bool isFlesh)
     {
+        if (isFlesh) return; // Blood splatter is handled directly by EnemyHealth
+
         GameObject imp = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         imp.transform.position = pos;
-        imp.transform.localScale = Vector3.one * (isFlesh ? 0.08f : 0.05f);
+        imp.transform.localScale = Vector3.one * 0.05f;
 
         Material mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-        mat.color = isFlesh ? new Color(0.85f, 0.1f, 0.1f) : new Color(0.9f, 0.85f, 0.4f);
+        mat.color = new Color(0.9f, 0.85f, 0.4f);
         imp.GetComponent<Renderer>().sharedMaterial = mat;
         Destroy(imp.GetComponent<Collider>());
         Destroy(imp, 0.35f);
