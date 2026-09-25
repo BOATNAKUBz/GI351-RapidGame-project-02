@@ -13,7 +13,7 @@ public class WeaponPickup : MonoBehaviour
     public float floatHeight = 0.15f;
 
     private Vector3 initialPos;
-    private bool isCollected = false;
+    public bool isCollected { get; private set; } = false;
 
     void Start()
     {
@@ -64,6 +64,20 @@ public class WeaponPickup : MonoBehaviour
     {
         if (isCollected) return;
         isCollected = true;
+
+        // Disable colliders immediately so raycasts/overlaps won't hit it in the remaining frame
+        Collider[] colliders = GetComponentsInChildren<Collider>();
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            if (colliders[i] != null) colliders[i].enabled = false;
+        }
+
+        // Disable renderers immediately
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] != null) renderers[i].enabled = false;
+        }
 
         // Give bonus reserve ammo if weapon was already possessed
         FPSWeapon active = PlayerInventory.Instance?.GetActiveWeapon();

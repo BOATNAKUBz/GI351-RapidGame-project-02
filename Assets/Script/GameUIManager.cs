@@ -26,6 +26,12 @@ public class GameUIManager : MonoBehaviour
     public Image dashCooldownFill;
     public Text dashCooldownText;
 
+    [Header("Heartbeat UI References")]
+    public RectTransform hpHeartRect;
+    public Image hpHeartImage;
+    private Sprite heartSprite;
+    private float currentHealthRatio = 1f;
+
     private Font defaultFont;
     private PlayerController playerController;
 
@@ -83,6 +89,11 @@ public class GameUIManager : MonoBehaviour
                 var hpT = t.Find("HealthPanel/HP_Text");
                 if (hpT != null) hpText = hpT.GetComponent<Text>();
             }
+            if (hpHeartRect == null)
+            {
+                var iconT = t.Find("HealthPanel/HP_HeartIcon") ?? t.Find("HealthPanel/HP_Icon");
+                if (iconT != null) hpHeartRect = iconT.GetComponent<RectTransform>();
+            }
             if (ammoText == null)
             {
                 var at = t.Find("AmmoPanel");
@@ -107,6 +118,11 @@ public class GameUIManager : MonoBehaviour
             {
                 var gop = t.Find("GameOverPanel");
                 if (gop != null) gameOverPanel = gop.gameObject;
+            }
+            if (gameOverPanel != null)
+            {
+                var img = gameOverPanel.GetComponent<Image>();
+                if (img != null) img.color = new Color(0f, 0f, 0f, 1f);
             }
             if (victoryPanel == null)
             {
@@ -180,6 +196,7 @@ public class GameUIManager : MonoBehaviour
     void Start()
     {
         SetupHpSlider();
+        SetupHeartUI();
 
         // Bind to Player Controller for Dash UI
         playerController = FindAnyObjectByType<PlayerController>();
@@ -233,12 +250,9 @@ public class GameUIManager : MonoBehaviour
 
     void Update()
     {
-        UpdateDashUI();
-
         // Quick restart with R when game over or victory
-        bool isGameOverOrVictory = false;
-        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) isGameOverOrVictory = true;
-        if (victoryPanel != null && victoryPanel.activeInHierarchy) isGameOverOrVictory = true;
+        bool isGameOverOrVictory = (gameOverPanel != null && gameOverPanel.activeInHierarchy) ||
+                                   (victoryPanel != null && victoryPanel.activeInHierarchy);
 
         if (!isGameOverOrVictory)
         {
@@ -246,7 +260,12 @@ public class GameUIManager : MonoBehaviour
             if (ph != null && ph.isDead) isGameOverOrVictory = true;
         }
 
-        if (isGameOverOrVictory)
+        if (!isGameOverOrVictory)
+        {
+            UpdateDashUI();
+            UpdateHeartbeatAnimation();
+        }
+        else
         {
             bool rPressed = InputBridge.GetReloadDown();
 #if ENABLE_INPUT_SYSTEM
@@ -621,7 +640,7 @@ public class GameUIManager : MonoBehaviour
         rt.sizeDelta = Vector2.zero;
 
         Image bg = gameOverPanel.AddComponent<Image>();
-        bg.color = new Color(0.1f, 0, 0, 0.88f);
+        bg.color = new Color(0f, 0f, 0f, 1f);
 
         GameObject title = new GameObject("Title");
         title.transform.SetParent(gameOverPanel.transform, false);
@@ -723,6 +742,7 @@ public class GameUIManager : MonoBehaviour
     {
         float clampedCurrent = Mathf.Clamp(current, 0f, max);
         float ratio = max > 0f ? Mathf.Clamp01(clampedCurrent / max) : 0f;
+        currentHealthRatio = ratio;
 
         if (hpSlider != null)
         {
@@ -778,6 +798,7 @@ public class GameUIManager : MonoBehaviour
 
     public void ShowInteractPrompt(string message)
     {
+        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) return;
         if (interactPromptText == null) CreateInteractPromptUI();
         if (interactPromptText != null)
         {
@@ -790,6 +811,7 @@ public class GameUIManager : MonoBehaviour
     {
         if (interactPromptText != null)
         {
+            interactPromptText.text = "";
             interactPromptText.gameObject.SetActive(false);
         }
     }
@@ -885,6 +907,7 @@ public class GameUIManager : MonoBehaviour
 
     public void ShowNotification(string message)
     {
+        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) return;
         if (notifText != null)
         {
             notifText.text = message;
@@ -906,6 +929,7 @@ public class GameUIManager : MonoBehaviour
 
     public void ShowHitMarker()
     {
+        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) return;
         if (hitMarker != null)
         {
             StopCoroutine("HitMarkerRoutine");
@@ -934,6 +958,7 @@ public class GameUIManager : MonoBehaviour
 
     public void FlashDamageVignette()
     {
+        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) return;
         if (damageVignette != null)
         {
             StopCoroutine("DamageVignetteRoutine");
@@ -957,18 +982,72 @@ public class GameUIManager : MonoBehaviour
         damageVignette.color = new Color(1f, 0, 0, 0f);
     }
 
+    public void SetGameplayHUDVisible(bool visible)
+    {
+        if (hudCanvas == null) return;
+        for (int i = 0; i < hudCanvas.transform.childCount; i++)
+        {
+            Transform child = hudCanvas.transform.GetChild(i);
+            if (child != null && child.gameObject != gameOverPanel && child.gameObject != victoryPanel)
+            {
+                child.gameObject.SetActive(visible);
+            }
+        }
+    }
+
     public void ShowGameOverScreen()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        if (gameOverPanel != null) gameOverPanel.SetActive(true);
+
+        if (damageVignette != null)
+        {
+            StopCoroutine("DamageVignetteRoutine");
+            damageVignette.color = Color.clear;
+        }
+
+        // Hide all gameplay HUD panels (HealthPanel, AmmoPanel, WavePanel, WeaponSlots, Dash, etc.)
+        SetGameplayHUDVisible(false);
+
+        if (gameOverPanel != null)
+        {
+            // Ensure full-screen pure black background
+            Image bg = gameOverPanel.GetComponent<Image>();
+            if (bg == null) bg = gameOverPanel.AddComponent<Image>();
+            bg.color = new Color(0f, 0f, 0f, 1f); // 100% solid black
+            bg.raycastTarget = true;
+
+            RectTransform rt = gameOverPanel.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero;
+                rt.offsetMax = Vector2.zero;
+                rt.sizeDelta = Vector2.zero;
+                rt.anchoredPosition = Vector2.zero;
+            }
+
+            gameOverPanel.transform.SetAsLastSibling();
+            gameOverPanel.SetActive(true);
+
+            // Ensure title, restart and menu buttons are active and visible
+            for (int i = 0; i < gameOverPanel.transform.childCount; i++)
+            {
+                gameOverPanel.transform.GetChild(i).gameObject.SetActive(true);
+            }
+        }
     }
 
     public void ShowVictoryScreen()
     {
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-        if (victoryPanel != null) victoryPanel.SetActive(true);
+        if (victoryPanel != null)
+        {
+            victoryPanel.transform.SetAsLastSibling();
+            victoryPanel.SetActive(true);
+        }
     }
 
     public void HideEndScreens()
@@ -977,5 +1056,186 @@ public class GameUIManager : MonoBehaviour
         Cursor.visible = false;
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (victoryPanel != null) victoryPanel.SetActive(false);
+
+        SetGameplayHUDVisible(true);
+    }
+
+    private void SetupHeartUI()
+    {
+        if (heartSprite == null)
+        {
+            heartSprite = CreateHeartSprite();
+        }
+
+        if (hudCanvas == null) return;
+
+        Transform hpPanel = hudCanvas.transform.Find("HealthPanel");
+        if (hpPanel == null) return;
+
+        // Check if there is an existing text HP_Icon; hide or destroy it to avoid component conflict
+        Transform oldIcon = hpPanel.Find("HP_Icon");
+        if (oldIcon != null)
+        {
+            if (oldIcon.GetComponent<Text>() != null)
+            {
+                oldIcon.gameObject.SetActive(false);
+                Destroy(oldIcon.gameObject);
+            }
+        }
+
+        // Look for or create clean dedicated HP_HeartIcon
+        Transform heartTr = hpPanel.Find("HP_HeartIcon");
+        if (heartTr == null)
+        {
+            GameObject heartObj = new GameObject("HP_HeartIcon");
+            heartObj.transform.SetParent(hpPanel, false);
+            hpHeartRect = heartObj.AddComponent<RectTransform>();
+            hpHeartImage = heartObj.AddComponent<Image>();
+        }
+        else
+        {
+            hpHeartRect = heartTr.GetComponent<RectTransform>();
+            hpHeartImage = heartTr.GetComponent<Image>();
+            if (hpHeartImage == null) hpHeartImage = heartTr.gameObject.AddComponent<Image>();
+        }
+
+        if (hpHeartRect != null)
+        {
+            hpHeartRect.anchorMin = new Vector2(0, 0.5f);
+            hpHeartRect.anchorMax = new Vector2(0, 0.5f);
+            hpHeartRect.pivot = new Vector2(0.5f, 0.5f);
+            hpHeartRect.anchoredPosition = new Vector2(24f, 0f);
+            hpHeartRect.sizeDelta = new Vector2(34f, 34f);
+            hpHeartRect.gameObject.SetActive(true);
+
+            Shadow shadow = hpHeartRect.GetComponent<Shadow>();
+            if (shadow == null) shadow = hpHeartRect.gameObject.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            shadow.effectDistance = new Vector2(1.5f, -1.5f);
+        }
+
+        if (hpHeartImage != null)
+        {
+            hpHeartImage.sprite = heartSprite;
+            hpHeartImage.color = new Color(1f, 0.18f, 0.32f, 1f);
+            hpHeartImage.raycastTarget = false;
+        }
+    }
+
+    private Sprite CreateHeartSprite()
+    {
+        int size = 128;
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        Color fillColor = new Color(1f, 0.18f, 0.32f, 1f);
+        Color highlightColor = new Color(1f, 0.75f, 0.85f, 1f);
+        Color shadowColor = new Color(0.72f, 0.05f, 0.18f, 1f);
+        Color transparent = new Color(0, 0, 0, 0);
+
+        Color[] pixels = new Color[size * size];
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float nx = ((float)x / (size - 1) * 2.7f) - 1.35f;
+                float ny = ((float)y / (size - 1) * 2.7f) - 1.25f;
+
+                float x2 = nx * nx;
+                float y2 = ny * ny;
+                float val = Mathf.Pow(x2 + y2 - 1f, 3f) - x2 * ny * y2;
+
+                if (val <= 0f)
+                {
+                    float edgeDist = Mathf.Clamp01(-val * 10f);
+
+                    float dx = nx + 0.4f;
+                    float dy = ny - 0.45f;
+                    float distFromHighlight = Mathf.Sqrt(dx * dx + dy * dy);
+                    float highlight = Mathf.Clamp01(1f - distFromHighlight / 0.45f);
+
+                    float bottomShadow = Mathf.Clamp01((0.4f - ny) * 0.7f);
+
+                    Color c = Color.Lerp(fillColor, shadowColor, bottomShadow * 0.4f);
+                    c = Color.Lerp(c, highlightColor, highlight * 0.55f);
+                    c.a = edgeDist;
+                    pixels[y * size + x] = c;
+                }
+                else
+                {
+                    float alpha = Mathf.Clamp01(1f - val * 14f);
+                    if (alpha > 0.02f)
+                    {
+                        Color c = fillColor;
+                        c.a = alpha;
+                        pixels[y * size + x] = c;
+                    }
+                    else
+                    {
+                        pixels[y * size + x] = transparent;
+                    }
+                }
+            }
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+
+        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
+    }
+
+    private void UpdateHeartbeatAnimation()
+    {
+        if (hpHeartRect == null) return;
+
+        float beatRate = Mathf.Lerp(2.8f, 1.15f, Mathf.Clamp01(currentHealthRatio));
+        float cycle = (Time.time * beatRate) % 1f;
+
+        float scale = 1f;
+        float brightness = 1f;
+
+        if (cycle < 0.16f)
+        {
+            float t = cycle / 0.16f;
+            float pulse = Mathf.Sin(t * Mathf.PI);
+            scale = 1f + pulse * 0.28f;
+            brightness = 1f + pulse * 0.35f;
+        }
+        else if (cycle < 0.34f)
+        {
+            float t = (cycle - 0.16f) / 0.18f;
+            float pulse = Mathf.Sin(t * Mathf.PI);
+            scale = 1f + pulse * 0.16f;
+            brightness = 1f + pulse * 0.2f;
+        }
+
+        hpHeartRect.localScale = new Vector3(scale, scale, 1f);
+
+        if (hpHeartImage != null)
+        {
+            Color baseCol;
+            if (currentHealthRatio > 0.5f)
+            {
+                baseCol = new Color(1f, 0.2f, 0.32f);
+            }
+            else if (currentHealthRatio > 0.25f)
+            {
+                baseCol = new Color(1f, 0.42f, 0.18f);
+            }
+            else
+            {
+                float flash = (Mathf.Sin(Time.time * 12f) + 1f) * 0.5f;
+                baseCol = Color.Lerp(new Color(0.85f, 0.08f, 0.08f), new Color(1f, 0.38f, 0.38f), flash);
+            }
+
+            hpHeartImage.color = new Color(
+                Mathf.Clamp01(baseCol.r * brightness),
+                Mathf.Clamp01(baseCol.g * brightness),
+                Mathf.Clamp01(baseCol.b * brightness),
+                1f
+            );
+        }
     }
 }

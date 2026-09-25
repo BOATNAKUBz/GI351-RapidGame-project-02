@@ -186,10 +186,9 @@ public class GameManager : MonoBehaviour
         var oldCapsule = player.GetComponent<CapsuleCollider>();
         if (oldCapsule != null) Destroy(oldCapsule);
 
-        // Ensure PlayerController (ตั้งค่าเฉพาะความเร็วเดิน)
+        // Ensure PlayerController (คงค่า walkSpeed ตามที่ตั้งใน Inspector)
         var pController = player.GetComponent<PlayerController>();
         if (pController == null) pController = player.AddComponent<PlayerController>();
-        pController.walkSpeed = 6.5f;
 
         // Ensure PlayerHealth
         var pHealth = player.GetComponent<PlayerHealth>();

@@ -155,7 +155,7 @@ public class FPSGun : MonoBehaviour
             EnemyHealth enemyHealth = hit.collider.GetComponentInParent<EnemyHealth>();
             if (enemyHealth != null && !enemyHealth.isDead)
             {
-                enemyHealth.TakeDamage(damage);
+                enemyHealth.TakeDamage(damage, hit.point, hit.normal);
 
                 // Hit feedback
                 if (GameUIManager.Instance != null)

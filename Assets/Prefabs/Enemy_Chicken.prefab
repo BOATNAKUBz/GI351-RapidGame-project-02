@@ -1256,7 +1256,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 40
   currentHealth: 35
-  customDisplayName: 
+  customDisplayName: Chicken
 --- !u!136 &7158691751897951106
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1287,7 +1287,7 @@ NavMeshAgent:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8669197267477625871}
-  m_Enabled: 1
+  m_Enabled: 0
   m_AgentTypeID: 0
   m_Radius: 0.35
   m_Speed: 6

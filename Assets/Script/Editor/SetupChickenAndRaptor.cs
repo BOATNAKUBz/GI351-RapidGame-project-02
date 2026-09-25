@@ -155,13 +155,14 @@ public static class SetupChickenAndRaptor
         var health = instance.GetComponent<EnemyHealth>();
         if (health == null) health = instance.AddComponent<EnemyHealth>();
         health.maxHealth = 40f;
+        health.customDisplayName = "Chicken";
 
         // ChickenAI
         var ai = instance.GetComponent<ChickenAI>();
         if (ai == null) ai = instance.AddComponent<ChickenAI>();
         ai.moveSpeed = 6f;
-        ai.attackRange = 1.5f;
-        ai.stoppingDistance = 1.2f;
+        ai.attackRange = 2.0f;
+        ai.stoppingDistance = 1.0f;
         ai.attackDamage = 8f;
         ai.attackCooldown = 0.6f;
 
