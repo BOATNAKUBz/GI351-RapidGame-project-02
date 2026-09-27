@@ -34,6 +34,9 @@ public class GameUIManager : MonoBehaviour
 
     private Font defaultFont;
     private PlayerController playerController;
+    private Coroutine notifCoroutine;
+    private Coroutine hitMarkerCoroutine;
+    private Coroutine vignetteCoroutine;
 
     void Awake()
     {
@@ -201,7 +204,7 @@ public class GameUIManager : MonoBehaviour
         // Bind to Player Controller for Dash UI
         playerController = FindAnyObjectByType<PlayerController>();
 
-        // Bind to Player
+        // Bind to Player Health
         var playerHealth = FindAnyObjectByType<PlayerHealth>();
         if (playerHealth != null)
         {
@@ -212,7 +215,7 @@ public class GameUIManager : MonoBehaviour
             UpdateHealth(playerHealth.currentHealth, playerHealth.maxHealth);
         }
 
-        // Bind to Player Inventory (New 3-slot weapon system)
+        // Bind to Player Inventory
         if (PlayerInventory.Instance != null)
         {
             PlayerInventory.Instance.OnSlotsChanged += UpdateWeaponSlots;
@@ -245,6 +248,14 @@ public class GameUIManager : MonoBehaviour
             hpSlider.maxValue = 1f;
             hpSlider.direction = Slider.Direction.LeftToRight;
             hpSlider.value = 1f;
+        }
+    }
+
+    private void SetupHeartUI()
+    {
+        if (hpHeartRect != null)
+        {
+            hpHeartImage = hpHeartRect.GetComponent<Image>();
         }
     }
 
@@ -328,6 +339,16 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
+    private void UpdateHeartbeatAnimation()
+    {
+        if (hpHeartRect == null) return;
+
+        // เต้นเร็วขึ้นเมื่อ HP เหลือน้อย
+        float speed = Mathf.Lerp(8f, 2f, currentHealthRatio);
+        float scale = 1f + Mathf.Sin(Time.time * speed) * 0.15f * (1f - currentHealthRatio * 0.5f);
+        hpHeartRect.localScale = new Vector3(scale, scale, 1f);
+    }
+
     public void TriggerRestart()
     {
         Time.timeScale = 1f;
@@ -370,7 +391,7 @@ public class GameUIManager : MonoBehaviour
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920, 1080);
 
-        // Damage Vignette (Full screen flash)
+        // Damage Vignette
         GameObject vigObj = new GameObject("DamageVignette");
         vigObj.transform.SetParent(canvasObj.transform, false);
         damageVignette = vigObj.AddComponent<Image>();
@@ -380,7 +401,7 @@ public class GameUIManager : MonoBehaviour
         vigRt.anchorMax = Vector2.one;
         vigRt.sizeDelta = Vector2.zero;
 
-        // Crosshair Root (Screen Center)
+        // Crosshair Root
         GameObject crosshairRoot = new GameObject("CrosshairRoot");
         crosshairRoot.transform.SetParent(canvasObj.transform, false);
         RectTransform cRt = crosshairRoot.AddComponent<RectTransform>();
@@ -390,7 +411,7 @@ public class GameUIManager : MonoBehaviour
 
         CreateCrosshairLines(crosshairRoot.transform);
 
-        // Hit Marker (Red X)
+        // Hit Marker
         GameObject hmObj = new GameObject("HitMarker");
         hmObj.transform.SetParent(crosshairRoot.transform, false);
         hitMarker = hmObj.AddComponent<Image>();
@@ -403,9 +424,9 @@ public class GameUIManager : MonoBehaviour
         GameObject hpPanel = new GameObject("HealthPanel");
         hpPanel.transform.SetParent(canvasObj.transform, false);
         RectTransform hpRt = hpPanel.AddComponent<RectTransform>();
-        hpRt.anchorMin = new Vector2(0, 0);
-        hpRt.anchorMax = new Vector2(0, 0);
-        hpRt.pivot = new Vector2(0, 0);
+        hpRt.anchorMin = Vector2.zero;
+        hpRt.anchorMax = Vector2.zero;
+        hpRt.pivot = Vector2.zero;
         hpRt.anchoredPosition = new Vector2(40, 40);
         hpRt.sizeDelta = new Vector2(300, 50);
 
@@ -434,19 +455,19 @@ public class GameUIManager : MonoBehaviour
         GameObject fillAreaObj = new GameObject("Fill Area");
         fillAreaObj.transform.SetParent(hpSliderObj.transform, false);
         RectTransform fillAreaRt = fillAreaObj.AddComponent<RectTransform>();
-        fillAreaRt.anchorMin = new Vector2(0, 0);
-        fillAreaRt.anchorMax = new Vector2(1, 1);
+        fillAreaRt.anchorMin = Vector2.zero;
+        fillAreaRt.anchorMax = Vector2.one;
         fillAreaRt.sizeDelta = Vector2.zero;
         fillAreaRt.anchoredPosition = Vector2.zero;
 
-        // Fill (หลอดเลือดเขียว)
+        // Fill
         GameObject fillObj = new GameObject("Fill");
         fillObj.transform.SetParent(fillAreaObj.transform, false);
         Image fillImg = fillObj.AddComponent<Image>();
         fillImg.color = new Color(0.2f, 0.85f, 0.3f);
         RectTransform fillRt = fillObj.GetComponent<RectTransform>();
-        fillRt.anchorMin = new Vector2(0, 0);
-        fillRt.anchorMax = new Vector2(1, 1);
+        fillRt.anchorMin = Vector2.zero;
+        fillRt.anchorMax = Vector2.one;
         fillRt.sizeDelta = Vector2.zero;
         fillRt.anchoredPosition = Vector2.zero;
 
@@ -484,7 +505,7 @@ public class GameUIManager : MonoBehaviour
         ammoText.alignment = TextAnchor.MiddleRight;
         ammoText.color = new Color(1f, 0.85f, 0.3f);
 
-        // Bottom Right: Dash Panel (วางเหนือ Ammo Panel)
+        // Dash Panel
         CreateDashUI(canvasObj.transform);
 
         // Top Left: Wave Info Panel
@@ -499,7 +520,7 @@ public class GameUIManager : MonoBehaviour
 
         waveText = wavePanel.AddComponent<Text>();
         waveText.font = defaultFont;
-        waveText.text = "WAVE 1 / 5";
+        waveText.text = "ZONE 1 / 5";
         waveText.fontSize = 34;
         waveText.fontStyle = FontStyle.Bold;
         waveText.color = new Color(1f, 0.95f, 0.9f);
@@ -655,12 +676,7 @@ public class GameUIManager : MonoBehaviour
         trt.anchoredPosition = new Vector2(0, 90);
         trt.sizeDelta = new Vector2(600, 100);
 
-        // Restart Button
-        CreateButton(gameOverPanel.transform, "RestartButton", "RESTART (R)", new Vector2(0, 0), new Vector2(240, 50), () => {
-            if (WaveManager.Instance != null) WaveManager.Instance.RestartGame();
-        });
-
-        // Main Menu Button
+        CreateButton(gameOverPanel.transform, "RestartButton", "RESTART (R)", new Vector2(0, 0), new Vector2(240, 50), TriggerRestart);
         CreateButton(gameOverPanel.transform, "MainMenuButton", "MAIN MENU", new Vector2(0, -70), new Vector2(240, 50), GoToMainMenu);
 
         gameOverPanel.SetActive(false);
@@ -691,12 +707,7 @@ public class GameUIManager : MonoBehaviour
         trt.anchoredPosition = new Vector2(0, 90);
         trt.sizeDelta = new Vector2(600, 100);
 
-        // Play Again Button
-        CreateButton(victoryPanel.transform, "PlayAgainButton", "PLAY AGAIN (R)", new Vector2(0, 0), new Vector2(240, 50), () => {
-            if (WaveManager.Instance != null) WaveManager.Instance.RestartGame();
-        });
-
-        // Main Menu Button
+        CreateButton(victoryPanel.transform, "PlayAgainButton", "PLAY AGAIN (R)", new Vector2(0, 0), new Vector2(240, 50), TriggerRestart);
         CreateButton(victoryPanel.transform, "MainMenuButton", "MAIN MENU", new Vector2(0, -70), new Vector2(240, 50), GoToMainMenu);
 
         victoryPanel.SetActive(false);
@@ -821,6 +832,48 @@ public class GameUIManager : MonoBehaviour
         ShowNotification(message);
     }
 
+    public void ShowNotification(string message, float duration = 2.5f)
+    {
+        if (notifText == null) return;
+        if (notifCoroutine != null) StopCoroutine(notifCoroutine);
+        notifCoroutine = StartCoroutine(CoShowNotification(message, duration));
+    }
+
+    private IEnumerator CoShowNotification(string message, float duration)
+    {
+        notifText.text = message;
+        notifText.gameObject.SetActive(true);
+        yield return new WaitForSeconds(duration);
+        notifText.text = "";
+        notifText.gameObject.SetActive(false);
+    }
+
+    public void ShowHitMarker()
+    {
+        if (hitMarker == null) return;
+        if (hitMarkerCoroutine != null) StopCoroutine(hitMarkerCoroutine);
+        hitMarkerCoroutine = StartCoroutine(CoFlashImage(hitMarker, 0.15f, new Color(1f, 0.2f, 0.2f, 0.9f)));
+    }
+
+    public void FlashDamageVignette()
+    {
+        if (damageVignette == null) return;
+        if (vignetteCoroutine != null) StopCoroutine(vignetteCoroutine);
+        vignetteCoroutine = StartCoroutine(CoFlashImage(damageVignette, 0.3f, new Color(1f, 0f, 0f, 0.4f)));
+    }
+
+    private IEnumerator CoFlashImage(Image img, float duration, Color startColor)
+    {
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            img.color = Color.Lerp(startColor, new Color(startColor.r, startColor.g, startColor.b, 0f), elapsed / duration);
+            yield return null;
+        }
+        img.color = new Color(startColor.r, startColor.g, startColor.b, 0f);
+    }
+
     public void UpdateWeaponSlots(FPSWeapon[] slots, int activeIndex)
     {
         if (weaponSlotsText == null) CreateWeaponSlotsUI();
@@ -869,13 +922,7 @@ public class GameUIManager : MonoBehaviour
         interactPromptText.fontSize = 26;
         interactPromptText.fontStyle = FontStyle.Bold;
         interactPromptText.alignment = TextAnchor.MiddleCenter;
-        interactPromptText.color = new Color(1f, 0.9f, 0.2f);
-
-        Outline outline = ipObj.AddComponent<Outline>();
-        outline.effectColor = new Color(0, 0, 0, 0.8f);
-        outline.effectDistance = new Vector2(1.5f, -1.5f);
-
-        ipObj.SetActive(false);
+        interactPromptText.color = Color.white;
     }
 
     private void CreateWeaponSlotsUI()
@@ -884,358 +931,51 @@ public class GameUIManager : MonoBehaviour
         GameObject wsObj = new GameObject("WeaponSlotsPanel");
         wsObj.transform.SetParent(hudCanvas.transform, false);
         RectTransform rt = wsObj.AddComponent<RectTransform>();
-        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(1, 0);
-        rt.anchoredPosition = new Vector2(-40, 150); // เขยิบขึ้นเพื่อไม่ให้ทับ Dash UI
-        rt.sizeDelta = new Vector2(400, 40);
+        rt.anchorMin = new Vector2(0.5f, 0f);
+        rt.anchorMax = new Vector2(0.5f, 0f);
+        rt.pivot = new Vector2(0.5f, 0f);
+        rt.anchoredPosition = new Vector2(0, 30);
+        rt.sizeDelta = new Vector2(600, 40);
 
         weaponSlotsText = wsObj.AddComponent<Text>();
         weaponSlotsText.font = defaultFont != null ? defaultFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         weaponSlotsText.fontSize = 20;
-        weaponSlotsText.alignment = TextAnchor.MiddleRight;
-        weaponSlotsText.color = Color.white;
-
-        Outline outline = wsObj.AddComponent<Outline>();
-        outline.effectColor = new Color(0, 0, 0, 0.8f);
-        outline.effectDistance = new Vector2(1f, -1f);
-    }
-
-    public void UpdateWaveInfo(int currentWave, int totalWaves, int enemiesRemaining)
-    {
-        if (waveText != null) waveText.text = $"WAVE {currentWave} / {totalWaves}";
-        if (enemyCountText != null) enemyCountText.text = $"Enemies Left: {enemiesRemaining}";
-    }
-
-    public void ShowNotification(string message)
-    {
-        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) return;
-        if (notifText != null)
-        {
-            notifText.text = message;
-            StopCoroutine("NotificationRoutine");
-            StartCoroutine(NotificationRoutine());
-        }
-    }
-
-    IEnumerator NotificationRoutine()
-    {
-        yield return new WaitForSeconds(3.0f);
-        if (notifText != null) notifText.text = "";
-    }
-
-    public void ShowWaveCountdown(int seconds)
-    {
-        ShowNotification($"Next Wave in {seconds}...");
-    }
-
-    public void ShowHitMarker()
-    {
-        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) return;
-        if (hitMarker != null)
-        {
-            StopCoroutine("HitMarkerRoutine");
-            StartCoroutine(HitMarkerRoutine());
-        }
-    }
-
-    IEnumerator HitMarkerRoutine()
-    {
-        if (hitMarker != null)
-        {
-            hitMarker.transform.localScale = Vector3.one * 1.3f;
-            foreach (var img in hitMarker.GetComponentsInChildren<Image>())
-            {
-                img.color = new Color(1f, 0.2f, 0.2f, 1f);
-            }
-
-            yield return new WaitForSeconds(0.08f);
-
-            foreach (var img in hitMarker.GetComponentsInChildren<Image>())
-            {
-                img.color = new Color(1f, 0.2f, 0.2f, 0f);
-            }
-        }
-    }
-
-    public void FlashDamageVignette()
-    {
-        if (gameOverPanel != null && gameOverPanel.activeInHierarchy) return;
-        if (damageVignette != null)
-        {
-            StopCoroutine("DamageVignetteRoutine");
-            StartCoroutine(DamageVignetteRoutine());
-        }
-    }
-
-    IEnumerator DamageVignetteRoutine()
-    {
-        damageVignette.color = new Color(1f, 0, 0, 0.35f);
-        float elapsed = 0f;
-        float dur = 0.25f;
-
-        while (elapsed < dur)
-        {
-            elapsed += Time.deltaTime;
-            float a = Mathf.Lerp(0.35f, 0f, elapsed / dur);
-            damageVignette.color = new Color(1f, 0, 0, a);
-            yield return null;
-        }
-        damageVignette.color = new Color(1f, 0, 0, 0f);
-    }
-
-    public void SetGameplayHUDVisible(bool visible)
-    {
-        if (hudCanvas == null) return;
-        for (int i = 0; i < hudCanvas.transform.childCount; i++)
-        {
-            Transform child = hudCanvas.transform.GetChild(i);
-            if (child != null && child.gameObject != gameOverPanel && child.gameObject != victoryPanel)
-            {
-                child.gameObject.SetActive(visible);
-            }
-        }
+        weaponSlotsText.alignment = TextAnchor.MiddleCenter;
+        weaponSlotsText.supportRichText = true;
     }
 
     public void ShowGameOverScreen()
     {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
-
-        if (damageVignette != null)
-        {
-            StopCoroutine("DamageVignetteRoutine");
-            damageVignette.color = Color.clear;
-        }
-
-        // Hide all gameplay HUD panels (HealthPanel, AmmoPanel, WavePanel, WeaponSlots, Dash, etc.)
-        SetGameplayHUDVisible(false);
-
         if (gameOverPanel != null)
         {
-            // Ensure full-screen pure black background
-            Image bg = gameOverPanel.GetComponent<Image>();
-            if (bg == null) bg = gameOverPanel.AddComponent<Image>();
-            bg.color = new Color(0f, 0f, 0f, 1f); // 100% solid black
-            bg.raycastTarget = true;
-
-            RectTransform rt = gameOverPanel.GetComponent<RectTransform>();
-            if (rt != null)
-            {
-                rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                rt.sizeDelta = Vector2.zero;
-                rt.anchoredPosition = Vector2.zero;
-            }
-
-            gameOverPanel.transform.SetAsLastSibling();
             gameOverPanel.SetActive(true);
-
-            // Ensure title, restart and menu buttons are active and visible
-            for (int i = 0; i < gameOverPanel.transform.childCount; i++)
-            {
-                gameOverPanel.transform.GetChild(i).gameObject.SetActive(true);
-            }
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            Time.timeScale = 0f;
         }
     }
 
     public void ShowVictoryScreen()
     {
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
         if (victoryPanel != null)
         {
-            victoryPanel.transform.SetAsLastSibling();
             victoryPanel.SetActive(true);
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            Time.timeScale = 0f;
         }
     }
 
-    public void HideEndScreens()
+    public void UpdateWaveUI(int currentWave, int maxWave, int enemiesLeft)
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-        if (gameOverPanel != null) gameOverPanel.SetActive(false);
-        if (victoryPanel != null) victoryPanel.SetActive(false);
-
-        SetGameplayHUDVisible(true);
+        // เปลี่ยนคำว่า WAVE ในเครื่องหมาย "" ตรงนี้ครับ
+        if (waveText != null) waveText.text = $"ZONE {currentWave} / {maxWave}";
+        if (enemyCountText != null) enemyCountText.text = $"Enemies Left: {enemiesLeft}";
     }
 
-    private void SetupHeartUI()
+    // เพิ่มฟังก์ชันรองรับตามที่ถูกเรียกในสคริปต์
+    public void UpdateWaveInfo(int currentWave, int maxWave, int enemiesLeft)
     {
-        if (heartSprite == null)
-        {
-            heartSprite = CreateHeartSprite();
-        }
-
-        if (hudCanvas == null) return;
-
-        Transform hpPanel = hudCanvas.transform.Find("HealthPanel");
-        if (hpPanel == null) return;
-
-        // Check if there is an existing text HP_Icon; hide or destroy it to avoid component conflict
-        Transform oldIcon = hpPanel.Find("HP_Icon");
-        if (oldIcon != null)
-        {
-            if (oldIcon.GetComponent<Text>() != null)
-            {
-                oldIcon.gameObject.SetActive(false);
-                Destroy(oldIcon.gameObject);
-            }
-        }
-
-        // Look for or create clean dedicated HP_HeartIcon
-        Transform heartTr = hpPanel.Find("HP_HeartIcon");
-        if (heartTr == null)
-        {
-            GameObject heartObj = new GameObject("HP_HeartIcon");
-            heartObj.transform.SetParent(hpPanel, false);
-            hpHeartRect = heartObj.AddComponent<RectTransform>();
-            hpHeartImage = heartObj.AddComponent<Image>();
-        }
-        else
-        {
-            hpHeartRect = heartTr.GetComponent<RectTransform>();
-            hpHeartImage = heartTr.GetComponent<Image>();
-            if (hpHeartImage == null) hpHeartImage = heartTr.gameObject.AddComponent<Image>();
-        }
-
-        if (hpHeartRect != null)
-        {
-            hpHeartRect.anchorMin = new Vector2(0, 0.5f);
-            hpHeartRect.anchorMax = new Vector2(0, 0.5f);
-            hpHeartRect.pivot = new Vector2(0.5f, 0.5f);
-            hpHeartRect.anchoredPosition = new Vector2(24f, 0f);
-            hpHeartRect.sizeDelta = new Vector2(34f, 34f);
-            hpHeartRect.gameObject.SetActive(true);
-
-            Shadow shadow = hpHeartRect.GetComponent<Shadow>();
-            if (shadow == null) shadow = hpHeartRect.gameObject.AddComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.85f);
-            shadow.effectDistance = new Vector2(1.5f, -1.5f);
-        }
-
-        if (hpHeartImage != null)
-        {
-            hpHeartImage.sprite = heartSprite;
-            hpHeartImage.color = new Color(1f, 0.18f, 0.32f, 1f);
-            hpHeartImage.raycastTarget = false;
-        }
-    }
-
-    private Sprite CreateHeartSprite()
-    {
-        int size = 128;
-        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-        tex.filterMode = FilterMode.Bilinear;
-        tex.wrapMode = TextureWrapMode.Clamp;
-
-        Color fillColor = new Color(1f, 0.18f, 0.32f, 1f);
-        Color highlightColor = new Color(1f, 0.75f, 0.85f, 1f);
-        Color shadowColor = new Color(0.72f, 0.05f, 0.18f, 1f);
-        Color transparent = new Color(0, 0, 0, 0);
-
-        Color[] pixels = new Color[size * size];
-
-        for (int y = 0; y < size; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                float nx = ((float)x / (size - 1) * 2.7f) - 1.35f;
-                float ny = ((float)y / (size - 1) * 2.7f) - 1.25f;
-
-                float x2 = nx * nx;
-                float y2 = ny * ny;
-                float val = Mathf.Pow(x2 + y2 - 1f, 3f) - x2 * ny * y2;
-
-                if (val <= 0f)
-                {
-                    float edgeDist = Mathf.Clamp01(-val * 10f);
-
-                    float dx = nx + 0.4f;
-                    float dy = ny - 0.45f;
-                    float distFromHighlight = Mathf.Sqrt(dx * dx + dy * dy);
-                    float highlight = Mathf.Clamp01(1f - distFromHighlight / 0.45f);
-
-                    float bottomShadow = Mathf.Clamp01((0.4f - ny) * 0.7f);
-
-                    Color c = Color.Lerp(fillColor, shadowColor, bottomShadow * 0.4f);
-                    c = Color.Lerp(c, highlightColor, highlight * 0.55f);
-                    c.a = edgeDist;
-                    pixels[y * size + x] = c;
-                }
-                else
-                {
-                    float alpha = Mathf.Clamp01(1f - val * 14f);
-                    if (alpha > 0.02f)
-                    {
-                        Color c = fillColor;
-                        c.a = alpha;
-                        pixels[y * size + x] = c;
-                    }
-                    else
-                    {
-                        pixels[y * size + x] = transparent;
-                    }
-                }
-            }
-        }
-
-        tex.SetPixels(pixels);
-        tex.Apply();
-
-        return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f);
-    }
-
-    private void UpdateHeartbeatAnimation()
-    {
-        if (hpHeartRect == null) return;
-
-        float beatRate = Mathf.Lerp(2.8f, 1.15f, Mathf.Clamp01(currentHealthRatio));
-        float cycle = (Time.time * beatRate) % 1f;
-
-        float scale = 1f;
-        float brightness = 1f;
-
-        if (cycle < 0.16f)
-        {
-            float t = cycle / 0.16f;
-            float pulse = Mathf.Sin(t * Mathf.PI);
-            scale = 1f + pulse * 0.28f;
-            brightness = 1f + pulse * 0.35f;
-        }
-        else if (cycle < 0.34f)
-        {
-            float t = (cycle - 0.16f) / 0.18f;
-            float pulse = Mathf.Sin(t * Mathf.PI);
-            scale = 1f + pulse * 0.16f;
-            brightness = 1f + pulse * 0.2f;
-        }
-
-        hpHeartRect.localScale = new Vector3(scale, scale, 1f);
-
-        if (hpHeartImage != null)
-        {
-            Color baseCol;
-            if (currentHealthRatio > 0.5f)
-            {
-                baseCol = new Color(1f, 0.2f, 0.32f);
-            }
-            else if (currentHealthRatio > 0.25f)
-            {
-                baseCol = new Color(1f, 0.42f, 0.18f);
-            }
-            else
-            {
-                float flash = (Mathf.Sin(Time.time * 12f) + 1f) * 0.5f;
-                baseCol = Color.Lerp(new Color(0.85f, 0.08f, 0.08f), new Color(1f, 0.38f, 0.38f), flash);
-            }
-
-            hpHeartImage.color = new Color(
-                Mathf.Clamp01(baseCol.r * brightness),
-                Mathf.Clamp01(baseCol.g * brightness),
-                Mathf.Clamp01(baseCol.b * brightness),
-                1f
-            );
-        }
+        UpdateWaveUI(currentWave, maxWave, enemiesLeft);
     }
 }

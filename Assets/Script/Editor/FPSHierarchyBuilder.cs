@@ -468,7 +468,7 @@ public static class FPSHierarchyBuilder
 
         Text waveText = wavePanel.AddComponent<Text>();
         waveText.font = defaultFont;
-        waveText.text = "WAVE 1 / 5";
+        waveText.text = "ZONE 1 / 5";
         waveText.fontSize = 34;
         waveText.fontStyle = FontStyle.Bold;
         waveText.color = new Color(1f, 0.95f, 0.9f);

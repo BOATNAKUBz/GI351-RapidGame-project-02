@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 using System.IO;
+using System.Collections.Generic;
 
 public static class SetupChickenAndRaptor
 {
@@ -10,8 +11,8 @@ public static class SetupChickenAndRaptor
     {
         FixAllPurpleMaterials();
         SetupEnemies();
-        EditorUtility.DisplayDialog("FPS Prototype", 
-            "Successfully fixed purple materials to URP Lit and configured Chicken & Raptor as Enemies with Animators!", 
+        EditorUtility.DisplayDialog("FPS Prototype",
+            "Successfully fixed purple materials to URP Lit and configured Chicken & Raptor as Enemies with Animators!",
             "Great!");
     }
 
@@ -34,8 +35,8 @@ public static class SetupChickenAndRaptor
             if (mat == null) continue;
 
             // Check if shader is Built-in Standard, error shader, or null
-            if (mat.shader == null || 
-                mat.shader.name == "Standard" || 
+            if (mat.shader == null ||
+                mat.shader.name == "Standard" ||
                 mat.shader.name.StartsWith("Standard ") ||
                 mat.shader.name.Contains("InternalErrorShader") ||
                 mat.shader.name.Contains("Error"))
@@ -265,54 +266,62 @@ public static class SetupChickenAndRaptor
         WaveManager wm = Object.FindAnyObjectByType<WaveManager>();
         if (wm != null)
         {
-            // If wavesConfigList is empty or has default entries, populate it nicely
-            if (wm.wavesConfigList == null || wm.wavesConfigList.Count == 0)
+            // ถ้ายังไม่มี Zone ใดๆ ถูกสร้างไว้ ให้สร้าง Zone ตัวอย่างให้เป็นแนวทาง
+            if (wm.zones == null || wm.zones.Count == 0)
             {
-                wm.wavesConfigList = new System.Collections.Generic.List<DynamicWaveConfig>();
+                wm.zones = new List<ZoneConfig>();
 
-                // Wave 1: Chickens
-                var wave1 = new DynamicWaveConfig { waveTitle = "Chicken Invasions" };
-                if (chickenPrefab != null) wave1.enemies.Add(new CustomEnemySpawnInfo { enemyPrefab = chickenPrefab, count = 6 });
-                wm.wavesConfigList.Add(wave1);
+                // Sample Zone 1: Chicken & Raptor Sequences
+                ZoneConfig defaultZone = new ZoneConfig();
 
-                // Wave 2: Chickens & Raptors
-                var wave2 = new DynamicWaveConfig { waveTitle = "Raptors & Chickens Attack" };
-                if (chickenPrefab != null) wave2.enemies.Add(new CustomEnemySpawnInfo { enemyPrefab = chickenPrefab, count = 8 });
-                if (raptorPrefab != null) wave2.enemies.Add(new CustomEnemySpawnInfo { enemyPrefab = raptorPrefab, count = 3 });
-                wm.wavesConfigList.Add(wave2);
+                if (chickenPrefab != null)
+                {
+                    defaultZone.spawnSequences.Add(new SpawnSequence
+                    {
+                        enemyPrefab = chickenPrefab,
+                        amount = 4,
+                        delayBeforeSpawn = 0f,
+                        intervalBetweenEach = 0.5f
+                    });
+                }
 
-                // Wave 3: Heavy Raptors & Swarm
-                var wave3 = new DynamicWaveConfig { waveTitle = "Raptor Pack Frenzy" };
-                if (chickenPrefab != null) wave3.enemies.Add(new CustomEnemySpawnInfo { enemyPrefab = chickenPrefab, count = 10 });
-                if (raptorPrefab != null) wave3.enemies.Add(new CustomEnemySpawnInfo { enemyPrefab = raptorPrefab, count = 6 });
-                wm.wavesConfigList.Add(wave3);
+                if (raptorPrefab != null)
+                {
+                    defaultZone.spawnSequences.Add(new SpawnSequence
+                    {
+                        enemyPrefab = raptorPrefab,
+                        amount = 2,
+                        delayBeforeSpawn = 2f,
+                        intervalBetweenEach = 1f
+                    });
+                }
+
+                wm.zones.Add(defaultZone);
             }
             else
             {
-                // Ensure chicken and raptor are included in waves
-                foreach (var w in wm.wavesConfigList)
+                // ถ้ามี Zone อยู่แล้ว แต่บาง Sequence ยังไม่ได้ใส่ Prefab ให้ยัดใส่เป็น fallback
+                foreach (var z in wm.zones)
                 {
-                    bool hasChicken = false;
-                    bool hasRaptor = false;
-                    foreach (var e in w.enemies)
+                    if (z.spawnSequences == null || z.spawnSequences.Count == 0)
                     {
-                        if (e.enemyPrefab == chickenPrefab || (chickenPrefab != null && e.enemyPrefab != null && e.enemyPrefab.name.Contains("Chicken"))) hasChicken = true;
-                        if (e.enemyPrefab == raptorPrefab || (raptorPrefab != null && e.enemyPrefab != null && e.enemyPrefab.name.Contains("Raptor"))) hasRaptor = true;
-                    }
-                    if (!hasChicken && chickenPrefab != null)
-                    {
-                        w.enemies.Add(new CustomEnemySpawnInfo { enemyPrefab = chickenPrefab, count = 4 });
-                    }
-                    if (!hasRaptor && raptorPrefab != null)
-                    {
-                        w.enemies.Add(new CustomEnemySpawnInfo { enemyPrefab = raptorPrefab, count = 2 });
+                        if (chickenPrefab != null)
+                        {
+                            z.spawnSequences.Add(new SpawnSequence
+                            {
+                                enemyPrefab = chickenPrefab,
+                                amount = 3,
+                                delayBeforeSpawn = 0f,
+                                intervalBetweenEach = 0.5f
+                            });
+                        }
                     }
                 }
             }
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
-            Debug.Log("[WaveManager] Wave configurations updated with Chicken and Raptor!");
+            Debug.Log("[WaveManager] Zone configurations updated with Chicken and Raptor sequences!");
         }
     }
 }
