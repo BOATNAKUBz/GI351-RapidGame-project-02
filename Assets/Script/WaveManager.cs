@@ -1,46 +1,56 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 
-// 1. เปลี่ยนโครงสร้างข้อมูลให้เก็บเป็น GameObject โดยตรง ไม่ใช้ Enum แล้ว
 [System.Serializable]
-public class CustomEnemySpawnInfo
+public class SpawnSequence
 {
-    [Tooltip("ลาก Prefab มอนสเตอร์ที่ต้องการให้เกิดใน Wave นี้มาใส่ตรงนี้ได้เลย")]
+    [Tooltip("Enemy Prefab to spawn in this sequence")]
     public GameObject enemyPrefab;
-    [Tooltip("จำนวนที่ต้องการให้เกิด")]
-    public int count = 5;
+
+    [Tooltip("Number of enemies to spawn")]
+    public int amount = 3;
+
+    [Tooltip("Delay in seconds before this sequence starts spawning")]
+    public float delayBeforeSpawn = 0f;
+
+    [Tooltip("Delay in seconds between each individual enemy spawn")]
+    public float intervalBetweenEach = 0.25f;
 }
 
 [System.Serializable]
-public class DynamicWaveConfig
+public class ZoneConfig
 {
-    public string waveTitle = "Wave 1";
-    [Tooltip("กดปุ่ม + เพื่อเพิ่มชนิดมอนสเตอร์ใน Wave นี้ได้ไม่จำกัด")]
-    public List<CustomEnemySpawnInfo> enemies = new List<CustomEnemySpawnInfo>();
-    public float spawnInterval = 1.0f;
+    [Tooltip("Trigger Collider (Box/Sphere) that detects the player entering this zone")]
+    public Collider zoneTrigger;
+
+    [Tooltip("Spawn points inside this zone (uses global spawn points if empty)")]
+    public Transform[] spawnPoints;
+
+    [Tooltip("Ordered list of spawn sequences for this zone")]
+    public List<SpawnSequence> spawnSequences = new List<SpawnSequence>();
 }
 
 public class WaveManager : MonoBehaviour
 {
     public static WaveManager Instance { get; private set; }
 
-    [Header("Wave Customization")]
-    [Tooltip("รายการ Wave ทั้งหมดในเกม")]
-    public List<DynamicWaveConfig> wavesConfigList = new List<DynamicWaveConfig>();
+    [Header("Zone Configuration")]
+    public List<ZoneConfig> zones = new List<ZoneConfig>();
 
-    [Header("Settings")]
-    public Transform[] spawnPoints;
-    public float timeBetweenWaves = 4f;
+    [Header("Global Fallback Spawn Points")]
+    public Transform[] globalSpawnPoints;
 
-    public int CurrentWaveIndex { get; private set; } = 0;
-    public int TotalWaves => wavesConfigList.Count;
-    public int EnemiesRemaining { get; private set; } = 0;
-    public bool IsWaveInProgress { get; private set; } = false;
+    public int CurrentZoneIndex { get; private set; } = -1;
+    public int TotalZones => zones.Count;
+    public int ZonesCleared { get; private set; } = 0;
+    public int ActiveEnemyCount => activeEnemies.Count;
 
-    private Coroutine waveRoutine;
+    private readonly List<GameObject> activeEnemies = new List<GameObject>();
+    private readonly HashSet<int> triggeredZones = new HashSet<int>();
+    private readonly HashSet<int> clearedZones   = new HashSet<int>();
+    private readonly Dictionary<int, int>  zoneAliveCount = new Dictionary<int, int>();
+    private readonly Dictionary<int, bool> zoneSpawnDone  = new Dictionary<int, bool>();
 
     void Awake()
     {
@@ -50,208 +60,241 @@ public class WaveManager : MonoBehaviour
 
     void Start()
     {
-        EnsureSpawnPoints();
-        if (wavesConfigList.Count > 0)
+        EnsureGlobalSpawnPoints();
+        SetupZoneTriggers();
+        UpdateZoneUI();
+    }
+
+    void SetupZoneTriggers()
+    {
+        for (int i = 0; i < zones.Count; i++)
         {
-            StartCoroutine(BeginFirstWaveDelayed());
+            var zone = zones[i];
+            if (zone.zoneTrigger == null) continue;
+
+            zone.zoneTrigger.isTrigger = true;
+
+            var proxy = zone.zoneTrigger.gameObject.GetComponent<ZoneTriggerProxy>();
+            if (proxy == null) proxy = zone.zoneTrigger.gameObject.AddComponent<ZoneTriggerProxy>();
+            proxy.Init(this, i);
+
+            zoneAliveCount[i] = 0;
+            zoneSpawnDone[i]  = false;
         }
     }
 
-    IEnumerator BeginFirstWaveDelayed()
+    public void OnPlayerEnterZone(int zoneIndex)
     {
-        yield return new WaitForSeconds(1.5f);
-        StartWave(0);
-    }
+        if (triggeredZones.Contains(zoneIndex)) return;
+        if (clearedZones.Contains(zoneIndex))   return;
 
-    void EnsureSpawnPoints()
-    {
-        if (spawnPoints != null && spawnPoints.Length > 0) return;
+        triggeredZones.Add(zoneIndex);
+        CurrentZoneIndex = zoneIndex;
 
-        GameObject existing = GameObject.Find("SpawnPoints");
-        if (existing != null && existing.transform.childCount > 0)
-        {
-            List<Transform> list = new List<Transform>();
-            for (int i = 0; i < existing.transform.childCount; i++)
-            {
-                list.Add(existing.transform.GetChild(i));
-            }
-            spawnPoints = list.ToArray();
-            return;
-        }
-
-        List<Transform> points = new List<Transform>();
-        GameObject parentObj = new GameObject("SpawnPoints");
-        float radius = 22f;
-        int count = 8;
-
-        for (int i = 0; i < count; i++)
-        {
-            float angle = i * Mathf.PI * 2f / count;
-            Vector3 pos = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
-            GameObject sp = new GameObject($"SpawnPoint_{i + 1}");
-            sp.transform.SetParent(parentObj.transform);
-            sp.transform.position = pos;
-            points.Add(sp.transform);
-        }
-
-        spawnPoints = points.ToArray();
-    }
-
-    public void StartWave(int waveIndex)
-    {
-        if (waveIndex >= wavesConfigList.Count)
-        {
-            OnAllWavesCompleted();
-            return;
-        }
-
-        CurrentWaveIndex = waveIndex;
-        if (waveRoutine != null) StopCoroutine(waveRoutine);
-        waveRoutine = StartCoroutine(RunWaveRoutine(wavesConfigList[waveIndex]));
-    }
-
-    IEnumerator RunWaveRoutine(DynamicWaveConfig wave)
-    {
-        IsWaveInProgress = true;
-
-        List<GameObject> spawnQueue = new List<GameObject>();
-        foreach (var info in wave.enemies)
-        {
-            if (info.enemyPrefab == null) continue;
-
-            for (int i = 0; i < info.count; i++)
-            {
-                spawnQueue.Add(info.enemyPrefab);
-            }
-        }
-
-        // สลับลำดับการเสกมอนสเตอร์แบบสุ่ม
-        for (int i = 0; i < spawnQueue.Count; i++)
-        {
-            int r = UnityEngine.Random.Range(i, spawnQueue.Count);
-            var temp = spawnQueue[i];
-            spawnQueue[i] = spawnQueue[r];
-            spawnQueue[r] = temp;
-        }
-
-        EnemiesRemaining = spawnQueue.Count;
+        if (GameUIManager.Instance != null)
+            GameUIManager.Instance.ShowNotification("ZONE " + (zoneIndex + 1) + " ENEMIES INCOMING!");
 
         if (SoundManager.Instance != null) SoundManager.Instance.PlayWaveStart();
 
-        if (GameUIManager.Instance != null)
+        StartCoroutine(RunZoneSequences(zoneIndex));
+    }
+
+    IEnumerator RunZoneSequences(int zoneIndex)
+    {
+        var zone = zones[zoneIndex];
+
+        foreach (var seq in zone.spawnSequences)
         {
-            GameUIManager.Instance.UpdateWaveInfo(CurrentWaveIndex + 1, TotalWaves, EnemiesRemaining);
-            GameUIManager.Instance.ShowNotification($"WAVE {CurrentWaveIndex + 1}: {wave.waveTitle}");
+            if (seq.enemyPrefab == null) continue;
+
+            if (seq.delayBeforeSpawn > 0f)
+                yield return new WaitForSeconds(seq.delayBeforeSpawn);
+
+            for (int i = 0; i < seq.amount; i++)
+            {
+                SpawnEnemy(seq.enemyPrefab, zoneIndex);
+
+                if (seq.intervalBetweenEach > 0f)
+                    yield return new WaitForSeconds(seq.intervalBetweenEach);
+            }
         }
 
-        foreach (var prefab in spawnQueue)
+        zoneSpawnDone[zoneIndex] = true;
+        CheckZoneClear(zoneIndex);
+    }
+
+    void SpawnEnemy(GameObject prefab, int zoneIndex)
+    {
+        if (prefab == null) return;
+
+        Vector3 pos = GetSpawnPosition(zoneIndex);
+        GameObject enemyObj = Instantiate(prefab, pos, Quaternion.identity);
+        enemyObj.name = "Enemy_" + prefab.name;
+
+        try { enemyObj.tag = "Enemy"; } catch { }
+
+        EnemyHealth health = enemyObj.GetComponent<EnemyHealth>();
+        if (health == null) health = enemyObj.AddComponent<EnemyHealth>();
+
+        EnemyAI ai = enemyObj.GetComponent<EnemyAI>();
+        if (ai == null) enemyObj.AddComponent<EnemyAI>();
+        else ai.SnapToGround();
+
+        activeEnemies.Add(enemyObj);
+
+        if (!zoneAliveCount.ContainsKey(zoneIndex)) zoneAliveCount[zoneIndex] = 0;
+        zoneAliveCount[zoneIndex]++;
+
+        UpdateEnemyCountUI();
+    }
+
+    public void OnEnemyKilled(GameObject enemy)
+    {
+        if (!activeEnemies.Remove(enemy)) return;
+
+        foreach (int zi in triggeredZones)
         {
-            SpawnEnemyFromPrefab(prefab);
-            yield return new WaitForSeconds(wave.spawnInterval);
+            if (clearedZones.Contains(zi)) continue;
+            if (zoneAliveCount.ContainsKey(zi) && zoneAliveCount[zi] > 0)
+            {
+                zoneAliveCount[zi]--;
+                UpdateEnemyCountUI();
+                CheckZoneClear(zi);
+                break;
+            }
         }
     }
 
-    Vector3 GetRandomSpawnPosition()
+    void CheckZoneClear(int zoneIndex)
     {
-        Vector3 pos;
-        if (spawnPoints != null && spawnPoints.Length > 0)
+        if (clearedZones.Contains(zoneIndex)) return;
+
+        bool spawnDone = zoneSpawnDone.ContainsKey(zoneIndex) && zoneSpawnDone[zoneIndex];
+        bool allDead   = zoneAliveCount.ContainsKey(zoneIndex) && zoneAliveCount[zoneIndex] <= 0;
+
+        if (spawnDone && allDead)
         {
-            Transform sp = spawnPoints[UnityEngine.Random.Range(0, spawnPoints.Length)];
-            Vector2 jitter = UnityEngine.Random.insideUnitCircle * 2f;
+            clearedZones.Add(zoneIndex);
+            ZonesCleared++;
+
+            if (GameUIManager.Instance != null)
+                GameUIManager.Instance.ShowNotification(
+                    "ZONE " + (zoneIndex + 1) + " CLEARED!  (" + ZonesCleared + "/" + TotalZones + ")");
+
+            if (SoundManager.Instance != null) SoundManager.Instance.PlayVictory();
+
+            UpdateZoneUI();
+
+            if (ZonesCleared >= TotalZones)
+                StartCoroutine(OnVictoryDelayed());
+        }
+    }
+
+    IEnumerator OnVictoryDelayed()
+    {
+        yield return new WaitForSeconds(1.5f);
+
+        if (GameUIManager.Instance != null) GameUIManager.Instance.ShowVictoryScreen();
+
+        var player = FindAnyObjectByType<PlayerController>();
+        if (player != null) player.UnlockCursor();
+    }
+
+    void UpdateZoneUI()
+    {
+        if (GameUIManager.Instance != null)
+            GameUIManager.Instance.UpdateWaveInfo(ZonesCleared, TotalZones, activeEnemies.Count);
+    }
+
+    void UpdateEnemyCountUI()
+    {
+        if (GameUIManager.Instance != null)
+            GameUIManager.Instance.UpdateWaveInfo(ZonesCleared, TotalZones, activeEnemies.Count);
+    }
+
+    Vector3 GetSpawnPosition(int zoneIndex)
+    {
+        Transform[] pts = null;
+
+        if (zoneIndex >= 0 && zoneIndex < zones.Count)
+            pts = zones[zoneIndex].spawnPoints;
+
+        if (pts == null || pts.Length == 0)
+            pts = globalSpawnPoints;
+
+        Vector3 pos;
+        if (pts != null && pts.Length > 0)
+        {
+            Transform sp = pts[Random.Range(0, pts.Length)];
+            Vector2 jitter = Random.insideUnitCircle * 2f;
             pos = sp.position + new Vector3(jitter.x, 0, jitter.y);
         }
         else
         {
-            pos = new Vector3(UnityEngine.Random.Range(-15f, 15f), 0f, UnityEngine.Random.Range(-15f, 15f));
+            pos = new Vector3(Random.Range(-15f, 15f), 0f, Random.Range(-15f, 15f));
         }
 
-        // หาตำแหน่งพื้นผิวด้วย Raycast เพื่อให้วางติดพื้นพอดี
-        if (Physics.Raycast(new Vector3(pos.x, 20f, pos.z), Vector3.down, out RaycastHit hit, 40f, Physics.AllLayers, QueryTriggerInteraction.Ignore))
-        {
+        if (Physics.Raycast(new Vector3(pos.x, 20f, pos.z), Vector3.down, out RaycastHit hit, 40f,
+                            Physics.AllLayers, QueryTriggerInteraction.Ignore))
             pos.y = hit.point.y;
-        }
         else
-        {
             pos.y = 0f;
-        }
 
         return pos;
+    }
+
+    void EnsureGlobalSpawnPoints()
+    {
+        if (globalSpawnPoints != null && globalSpawnPoints.Length > 0) return;
+
+        GameObject existing = GameObject.Find("SpawnPoints");
+        if (existing != null && existing.transform.childCount > 0)
+        {
+            var list = new List<Transform>();
+            for (int i = 0; i < existing.transform.childCount; i++)
+                list.Add(existing.transform.GetChild(i));
+            globalSpawnPoints = list.ToArray();
+            return;
+        }
+
+        var points    = new List<Transform>();
+        var parentObj = new GameObject("SpawnPoints");
+        float radius  = 22f;
+        int count     = 8;
+
+        for (int i = 0; i < count; i++)
+        {
+            float angle = i * Mathf.PI * 2f / count;
+            var sp = new GameObject("SpawnPoint_" + (i + 1));
+            sp.transform.SetParent(parentObj.transform);
+            sp.transform.position = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+            points.Add(sp.transform);
+        }
+
+        globalSpawnPoints = points.ToArray();
     }
 
     public GameObject SpawnEnemyFromPrefab(GameObject prefab)
     {
         if (prefab == null) return null;
 
-        Vector3 spawnPos = GetRandomSpawnPosition();
-        GameObject enemyObj = Instantiate(prefab, spawnPos, Quaternion.identity);
-        enemyObj.name = $"Enemy_{prefab.name}";
+        Vector3 pos = GetSpawnPosition(-1);
+        GameObject enemyObj = Instantiate(prefab, pos, Quaternion.identity);
+        enemyObj.name = "Enemy_" + prefab.name;
 
         try { enemyObj.tag = "Enemy"; } catch { }
 
-        // Auto Ensure Components
         EnemyHealth health = enemyObj.GetComponent<EnemyHealth>();
         if (health == null) health = enemyObj.AddComponent<EnemyHealth>();
 
         EnemyAI ai = enemyObj.GetComponent<EnemyAI>();
-        if (ai == null) ai = enemyObj.AddComponent<EnemyAI>();
+        if (ai == null) enemyObj.AddComponent<EnemyAI>();
         else ai.SnapToGround();
 
+        activeEnemies.Add(enemyObj);
+        UpdateEnemyCountUI();
+
         return enemyObj;
-    }
-
-    public void OnEnemyKilled(GameObject enemy)
-    {
-        EnemiesRemaining = Mathf.Max(0, EnemiesRemaining - 1);
-
-        if (GameUIManager.Instance != null)
-        {
-            GameUIManager.Instance.UpdateWaveInfo(CurrentWaveIndex + 1, TotalWaves, EnemiesRemaining);
-        }
-
-        if (EnemiesRemaining <= 0 && IsWaveInProgress)
-        {
-            IsWaveInProgress = false;
-            StartCoroutine(WaveClearRoutine());
-        }
-    }
-
-    IEnumerator WaveClearRoutine()
-    {
-        int nextWave = CurrentWaveIndex + 1;
-
-        if (nextWave >= wavesConfigList.Count)
-        {
-            OnAllWavesCompleted();
-            yield break;
-        }
-
-        if (SoundManager.Instance != null) SoundManager.Instance.PlayVictory();
-
-        if (GameUIManager.Instance != null)
-        {
-            GameUIManager.Instance.ShowNotification($"WAVE {CurrentWaveIndex + 1} CLEARED!");
-        }
-
-        for (int i = (int)timeBetweenWaves; i > 0; i--)
-        {
-            if (GameUIManager.Instance != null)
-            {
-                GameUIManager.Instance.ShowWaveCountdown(i);
-            }
-            yield return new WaitForSeconds(1f);
-        }
-
-        StartWave(nextWave);
-    }
-
-    void OnAllWavesCompleted()
-    {
-        IsWaveInProgress = false;
-        if (SoundManager.Instance != null) SoundManager.Instance.PlayVictory();
-        if (GameUIManager.Instance != null) GameUIManager.Instance.ShowVictoryScreen();
-
-        var player = FindAnyObjectByType<PlayerController>();
-        if (player != null) player.UnlockCursor();
     }
 
     public void RestartGame()
@@ -262,12 +305,29 @@ public class WaveManager : MonoBehaviour
 
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
         if (!string.IsNullOrEmpty(sceneName))
-        {
             UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
-        }
         else
-        {
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+    }
+}
+
+public class ZoneTriggerProxy : MonoBehaviour
+{
+    private WaveManager manager;
+    private int zoneIndex;
+
+    public void Init(WaveManager mgr, int idx)
+    {
+        manager   = mgr;
+        zoneIndex = idx;
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (manager == null) return;
+        if (other.CompareTag("Player") || other.GetComponent<PlayerController>() != null)
+        {
+            manager.OnPlayerEnterZone(zoneIndex);
         }
     }
 }
