@@ -266,8 +266,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PickupItem
   itemType: 1
-  healAmount: 35
-  ammoAmount: 45
+  healAmount: 0
+  ammoAmount: 5
   scoreAmount: 100
 --- !u!135 &1047414742025664552
 SphereCollider:

@@ -2388,9 +2388,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ee49e1dfdd11eb429e59e0ef55fc6cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 100
-  currentHealth: 100
+  maxHealth: 75
+  currentHealth: 75
   customDisplayName: 
+  showHealthBarOnlyOnDamage: 1
+  healthBarVisibleDuration: 4
 --- !u!114 &8459729219542804126
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2403,8 +2405,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c480e1fd368e1d046a628fb359cdbf1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RaptorAI
-  dropItemPrefab: {fileID: 2122155298024884394, guid: 606416a03f1615a42a8244beec668fb5, type: 3}
-  dropChance: 0.33
+  dropItemPrefab: {fileID: 8421487562004006942, guid: b413c9041d42bd04f8923f4ee92ab1f7, type: 3}
+  dropChance: 1
   stats:
     type: 0
     displayName: 
@@ -2418,14 +2420,18 @@ MonoBehaviour:
     emissionColor: {r: 0, g: 0, b: 0, a: 0}
     dropChance: 0
   player: {fileID: 0}
-  moveSpeed: 15
+  moveSpeed: 13
   stoppingDistance: 1.6
-  attackRange: 2
-  attackDamage: 10
+  attackRange: 5
+  attackDamage: 15
   attackCooldown: 1
   snapToGround: 1
   groundCheckDistance: 10
   raycastStartHeight: 1.5
+  surroundRadius: 2.2
+  separationRadius: 1.3
+  separationWeight: 1.4
+  orbitSpeed: 10
   modelRotationOffset: 180
   dashRange: 10
   dashSpeed: 30

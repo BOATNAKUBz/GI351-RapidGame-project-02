@@ -692,8 +692,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da638c481837c3549add370e211ca122, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAI
-  dropItemPrefab: {fileID: 0}
-  dropChance: 0.5
+  dropItemPrefab: {fileID: 2122155298024884394, guid: 606416a03f1615a42a8244beec668fb5, type: 3}
+  dropChance: 1
   stats:
     type: 1
     displayName: Grunt
@@ -707,9 +707,18 @@ MonoBehaviour:
     emissionColor: {r: 1.2, g: 1.3499999, b: 0.3, a: 1.5}
     dropChance: 0.5
   player: {fileID: 0}
-  moveSpeed: 3.5
+  moveSpeed: 13
   stoppingDistance: 1.5
-  attackRange: 2
+  attackRange: 5
+  attackDamage: 10
+  attackCooldown: 1
+  snapToGround: 1
+  groundCheckDistance: 10
+  raycastStartHeight: 1.5
+  surroundRadius: 2.2
+  separationRadius: 1.3
+  separationWeight: 1.4
+  orbitSpeed: 10
 --- !u!114 &3246149287026229020
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -722,8 +731,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ee49e1dfdd11eb429e59e0ef55fc6cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 85
-  currentHealth: 0
+  maxHealth: 50
+  currentHealth: 50
+  customDisplayName: 
+  showHealthBarOnlyOnDamage: 1
+  healthBarVisibleDuration: 4
 --- !u!1 &7004359193182461894
 GameObject:
   m_ObjectHideFlags: 0
