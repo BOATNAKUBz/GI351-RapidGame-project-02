@@ -520,6 +520,9 @@ public static class FPSHierarchyBuilder
         ui.hitMarker = hitMarker;
         ui.damageVignette = damageVignette;
 
+        // Bake NavMesh for the gameplay arena
+        try { NavMeshBakeUtility.BakeScene(EditorSceneManager.GetActiveScene()); } catch { }
+
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
         Debug.Log($"[FPSHierarchyBuilder] Saved Gameplay Scene to {GameplayScenePath}");

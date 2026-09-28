@@ -1,20 +1,21 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.AI;
 
 public class RaptorAI : EnemyAI
 {
-    [Header("Model Facing")]
-    [Tooltip("องศาการหมุนชดเชยของโมเดล (180 องศาเพื่อกลับด้านให้หัวหันหาผู้เล่น)")]
-    public float modelRotationOffset = 180f;
-
     [Header("Raptor Dash Attack Settings")]
     public float dashRange = 6f;          // ระยะที่เริ่มพุ่งใส่ผู้เล่น
     public float dashSpeed = 14f;         // ความเร็วตอนพุ่ง
     public float dashCooldown = 4f;       // คูลดาวน์สกิลพุ่ง (วินาที)
     private bool isDashing = false;
     private float nextDashTime = 0f;
-    private NavMeshAgent agent;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        // องศาการหมุนชดเชยของโมเดลแรปเตอร์ (180 องศาเพื่อให้หัวหันไปข้างหน้า)
+        modelRotationOffset = 180f;
+    }
 
     protected override void Start()
     {
@@ -22,153 +23,31 @@ public class RaptorAI : EnemyAI
 
         if (attackRange < 2.2f) attackRange = 2.2f;
         if (stoppingDistance > 1.3f) stoppingDistance = 1.3f;
-
-        agent = GetComponent<NavMeshAgent>();
-        if (agent != null)
-        {
-            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 1.5f, NavMesh.AllAreas))
-            {
-                agent.enabled = true;
-                agent.speed = moveSpeed;
-                agent.stoppingDistance = stoppingDistance;
-                agent.updateRotation = false; // ปิดเพื่อให้เราคุมการหมุนกลับด้าน 180 องศาได้เอง
-            }
-            else
-            {
-                agent.enabled = false; // ปิดถ้าไม่มี NavMesh เพื่อป้องกันการขัดแย้งกับ transform.position
-            }
-        }
-
-        if (snapToGround)
-        {
-            SnapToGround();
-        }
     }
 
     protected override void Update()
     {
-        // 1. จัดการ Knockback เมื่อโดนขวานหรือลูกซอง
-        if (isKnockedBack)
+        if (isDashing) return;
+
+        // อัปเดต Speed ให้กับ Animator ของ Raptor
+        if (animator != null && player != null)
         {
-            transform.position += knockbackVelocity * Time.deltaTime;
-            knockbackVelocity = Vector3.Lerp(knockbackVelocity, Vector3.zero, 8f * Time.deltaTime);
-            knockbackDuration -= Time.deltaTime;
+            Vector3 flatEnemy = new Vector3(transform.position.x, 0, transform.position.z);
+            Vector3 flatPlayer = new Vector3(player.position.x, 0, player.position.z);
+            float distance = Vector3.Distance(flatEnemy, flatPlayer);
 
-            if (knockbackDuration <= 0f)
-            {
-                isKnockedBack = false;
-                if (agent != null && agent.enabled && agent.isOnNavMesh)
-                {
-                    agent.isStopped = false;
-                }
-            }
-
-            if (snapToGround) SnapToGround();
-            return;
-        }
-
-        if (stunRemaining > 0f)
-        {
-            stunRemaining -= Time.deltaTime;
-        }
-
-        if (player == null || isDashing) return;
-
-        Vector3 flatEnemy = new Vector3(transform.position.x, 0, transform.position.z);
-        Vector3 flatPlayer = new Vector3(player.position.x, 0, player.position.z);
-        float distance = Vector3.Distance(flatEnemy, flatPlayer);
-        float verticalDist = Mathf.Abs(transform.position.y - player.position.y);
-
-        if (animator != null)
-        {
             try { animator.SetFloat("Speed", distance > stoppingDistance ? moveSpeed : 0f); } catch { }
-        }
 
-        // ถ้าอยู่ในระยะพุ่ง และ คูลดาวน์พร้อมใช้งาน และไม่ติดสตัน ให้พุ่งชนทันที
-        if (distance <= dashRange && Time.time >= nextDashTime && stunRemaining <= 0f)
-        {
-            StartCoroutine(DashRoutine());
-        }
-        else
-        {
-            bool readyToAttack = (Time.time >= nextAttackTime && stunRemaining <= 0f);
-
-            // คำนวณตำแหน่งเป้าหมาย: ถ้าพร้อมตีธรรมดาให้พุ่งตรงเข้าหาผู้เล่น
-            Vector3 targetPosition;
-            if (readyToAttack)
+            // ถ้าอยู่ในระยะพุ่ง และ คูลดาวน์พร้อมใช้งาน และไม่ติดสตัน ให้พุ่งชนทันที
+            if (distance <= dashRange && Time.time >= nextDashTime && stunRemaining <= 0f && !isKnockedBack)
             {
-                targetPosition = player.position;
-            }
-            else
-            {
-                float currentAngle = surroundOffsetAngle + (Time.time * orbitSpeed);
-                Vector3 slotOffset = Quaternion.Euler(0, currentAngle, 0) * Vector3.forward * surroundRadius;
-                targetPosition = player.position + slotOffset;
-            }
-            targetPosition.y = transform.position.y;
-
-            // แรงแยกตัวออกจากศัตรูตัวอื่น
-            Vector3 separationForce = Vector3.zero;
-            Collider[] nearbyCols = Physics.OverlapSphere(transform.position, separationRadius);
-            for (int i = 0; i < nearbyCols.Length; i++)
-            {
-                Collider col = nearbyCols[i];
-                if (col.transform.root == transform.root) continue;
-                if (col.CompareTag("Enemy"))
-                {
-                    Vector3 away = transform.position - col.transform.position;
-                    away.y = 0;
-                    float dist = away.magnitude;
-                    if (dist > 0.01f && dist < separationRadius)
-                    {
-                        separationForce += (away.normalized / dist);
-                    }
-                }
-            }
-
-            Vector3 toSlot = (targetPosition - transform.position);
-            toSlot.y = 0;
-            float currentSepWeight = readyToAttack ? (separationWeight * 0.25f) : separationWeight;
-            Vector3 moveDir = (toSlot.normalized + separationForce * currentSepWeight).normalized;
-
-            if (moveDir != Vector3.zero)
-            {
-                Quaternion targetRot = Quaternion.LookRotation(moveDir) * Quaternion.Euler(0, modelRotationOffset, 0);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 15f * Time.deltaTime);
-            }
-
-            if (distance > stoppingDistance)
-            {
-                if (agent != null && agent.enabled && agent.isOnNavMesh)
-                {
-                    agent.isStopped = false;
-                    agent.SetDestination(targetPosition);
-                }
-                else
-                {
-                    transform.position += moveDir * moveSpeed * Time.deltaTime;
-                }
-            }
-            else
-            {
-                if (agent != null && agent.enabled && agent.isOnNavMesh)
-                {
-                    agent.isStopped = true;
-                }
-            }
-
-            // ยึดติดพื้นเสมอ
-            if (snapToGround)
-            {
-                SnapToGround();
-            }
-
-            // ตีธรรมดาเมื่อเข้าใกล้และไม่ติดสตัน
-            if (distance <= attackRange && verticalDist <= 2.5f && stunRemaining <= 0f)
-            {
-                OnReachPlayer();
+                StartCoroutine(DashRoutine());
+                return;
             }
         }
+
+        // ใช้ระบบเดินอ้อมสิ่งกีดขวาง + ไม่เดินทะลุ Collider ของ EnemyAI
+        base.Update();
     }
 
     private IEnumerator DashRoutine()
@@ -176,9 +55,9 @@ public class RaptorAI : EnemyAI
         isDashing = true;
         nextDashTime = Time.time + dashCooldown;
 
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        if (navAgent != null && navAgent.enabled && navAgent.isOnNavMesh)
         {
-            agent.isStopped = true;
+            navAgent.isStopped = true;
         }
 
         // 1. หมุนหน้าไปหาผู้เล่น และล็อคเป้าหมาย พร้อมกลับด้าน 180 องศา
@@ -195,15 +74,16 @@ public class RaptorAI : EnemyAI
             try { animator.SetTrigger("Attack"); } catch { }
         }
 
-        // 2. พุ่งตรงไปข้างหน้าตามทิศทางเป้าหมายหาผู้เล่น
-        float dashDuration = 0.35f; // ระยะเวลาในการพุ่ง (วินาที)
+        // 2. พุ่งตรงไปข้างหน้าตามทิศทางเป้าหมายหาผู้เล่น (ใช้ MoveWithCollisionSweep ไม่พุ่งทะลุกำแพง)
+        float dashDuration = 0.35f;
         float elapsed = 0f;
         bool hasHitPlayer = false;
 
         while (elapsed < dashDuration)
         {
             elapsed += Time.deltaTime;
-            transform.position += targetDirection * dashSpeed * Time.deltaTime;
+            Vector3 dashStep = targetDirection * dashSpeed * Time.deltaTime;
+            MoveWithCollisionSweep(dashStep);
 
             if (snapToGround)
             {
@@ -259,9 +139,9 @@ public class RaptorAI : EnemyAI
             }
         }
 
-        if (agent != null && agent.enabled && agent.isOnNavMesh)
+        if (navAgent != null && navAgent.enabled && navAgent.isOnNavMesh)
         {
-            agent.isStopped = false;
+            navAgent.isStopped = false;
         }
 
         isDashing = false;
