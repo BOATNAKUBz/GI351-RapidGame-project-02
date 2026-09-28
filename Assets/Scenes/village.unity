@@ -49336,6 +49336,158 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5603845648697623603, guid: a23d9e79c6094334cb0eb4548036483f, type: 3}
   m_PrefabInstance: {fileID: 348031398}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &348528670
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 348528676}
+  - component: {fileID: 348528675}
+  - component: {fileID: 348528674}
+  - component: {fileID: 348528673}
+  - component: {fileID: 348528672}
+  - component: {fileID: 348528671}
+  m_Layer: 0
+  m_Name: Managers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &348528671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 348528670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ea6079044bd02649bf2e1d9bd8a39c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaveManager
+  zones:
+  - zoneTrigger: {fileID: 0}
+    spawnPoints:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    spawnSequences:
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      amount: 2
+      delayBeforeSpawn: 4
+      intervalBetweenEach: 4
+    - enemyPrefab: {fileID: 1669965196625898662, guid: 398bc1741d2b5124c80d94af5af54589, type: 3}
+      amount: 3
+      delayBeforeSpawn: 0
+      intervalBetweenEach: 0
+  globalSpawnPoints: []
+--- !u!114 &348528672
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 348528670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f390d723fe9086a4f91533127c55a618, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameUIManager
+  hudCanvas: {fileID: 0}
+  hpSlider: {fileID: 0}
+  hpText: {fileID: 0}
+  ammoText: {fileID: 0}
+  waveText: {fileID: 0}
+  enemyCountText: {fileID: 0}
+  notifText: {fileID: 0}
+  hitMarker: {fileID: 0}
+  damageVignette: {fileID: 0}
+  interactPromptText: {fileID: 0}
+  weaponSlotsText: {fileID: 0}
+  gameOverPanel: {fileID: 0}
+  victoryPanel: {fileID: 0}
+  dashCooldownFill: {fileID: 0}
+  dashCooldownText: {fileID: 0}
+  hpHeartRect: {fileID: 0}
+  hpHeartImage: {fileID: 0}
+--- !u!114 &348528673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 348528670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c57233bc334605c46839cd3f7e77cf45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LootDrop
+  medkitPrefab: {fileID: 8421487562004006942, guid: b413c9041d42bd04f8923f4ee92ab1f7, type: 3}
+  ammoPrefab: {fileID: 2122155298024884394, guid: 606416a03f1615a42a8244beec668fb5, type: 3}
+  powerGemPrefab: {fileID: 6713561677308950538, guid: b4b38b745b26db6488d23d3a169ef12b, type: 3}
+--- !u!114 &348528674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 348528670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50ef8f5a9427bf24986765058f8a12a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  customShootClip: {fileID: 0}
+  customHitMarkerClip: {fileID: 0}
+  customEnemyHurtClip: {fileID: 0}
+  customEnemyDeathClip: {fileID: 0}
+  customPlayerHurtClip: {fileID: 0}
+  customPickupMedkitClip: {fileID: 0}
+  customPickupAmmoClip: {fileID: 0}
+  customWaveStartClip: {fileID: 0}
+  customVictoryClip: {fileID: 0}
+  customGameOverClip: {fileID: 0}
+  customEmptyClickClip: {fileID: 0}
+  customShotgunShootClip: {fileID: 0}
+  customRevolverShootClip: {fileID: 0}
+  customShotgunPumpClip: {fileID: 0}
+  customAxeSwingClip: {fileID: 8300000, guid: caf14903051b3e44c9f0340c1e193444, type: 3}
+  customAxeHitClip: {fileID: 8300000, guid: e621eb06ffa9c4b48b762ba2a3b1c4b9, type: 3}
+  customWeaponPickupClip: {fileID: 0}
+  customDashClip: {fileID: 0}
+--- !u!114 &348528675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 348528670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a43e3f6f7936d3f42b9e626c1880ea00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  arenaSize: 50
+  wallHeight: 4.5
+--- !u!4 &348528676
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 348528670}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &348696273
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -294109,3 +294261,4 @@ SceneRoots:
   - {fileID: 556571652}
   - {fileID: 1770067696}
   - {fileID: 1090041165}
+  - {fileID: 348528676}
