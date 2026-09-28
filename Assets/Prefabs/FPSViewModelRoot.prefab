@@ -442,12 +442,13 @@ MonoBehaviour:
   slotIndex: 2
   isUnlocked: 1
   damage: 40
-  fireRate: 0.55
-  range: 2.6
+  fireRate: 0.2
+  range: 2
   isMelee: 1
   pelletCount: 1
   spreadAngle: 120
-  meleeRadius: 4.2
+  meleeRadius: 1
+  knockbackForce: 15
   meleeTrail: {fileID: 0}
   magazineSize: 0
   currentAmmo: 0
@@ -3771,7 +3772,7 @@ MonoBehaviour:
   weaponType: 1
   weaponName: Revolver
   slotIndex: 1
-  isUnlocked: 0
+  isUnlocked: 1
   damage: 40
   fireRate: 0.32
   range: 85
@@ -3779,6 +3780,7 @@ MonoBehaviour:
   pelletCount: 1
   spreadAngle: 0
   meleeRadius: 0.65
+  knockbackForce: 15
   meleeTrail: {fileID: 0}
   magazineSize: 6
   currentAmmo: 6

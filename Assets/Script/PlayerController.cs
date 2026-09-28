@@ -6,7 +6,6 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movement Settings")]
     public float walkSpeed = 6.5f;
-    public float sprintSpeed = 10.5f;
     public float jumpHeight = 1.3f;
     public float gravity = -20f;
 
@@ -123,6 +122,7 @@ public class PlayerController : MonoBehaviour
 
         transform.Rotate(Vector3.up * mouseDelta.x);
     }
+
     void HandleMovement()
     {
         isGrounded = controller.isGrounded;
@@ -150,14 +150,8 @@ public class PlayerController : MonoBehaviour
             moveInput.Normalize();
         }
 
-        // Sprinting when holding Sprint (Left Shift)
-        float currentSpeed = walkSpeed;
-        if (InputBridge.GetSprint() && isGrounded && moveInput.sqrMagnitude > 0.01f)
-        {
-            currentSpeed = Mathf.Max(sprintSpeed, walkSpeed * 1.5f);
-        }
-
-        Vector3 moveVelocity = moveInput * currentSpeed;
+        // ใช้ความเร็วปกติเดินอย่างเดียว ไม่มีการคูณความเร็วเมื่อกด Shift
+        Vector3 moveVelocity = moveInput * walkSpeed;
 
         if (InputBridge.GetJumpDown() && isGrounded)
         {
@@ -172,8 +166,13 @@ public class PlayerController : MonoBehaviour
 
     private void HandleDashInput()
     {
-        // Dash with Q key or SprintDown (Shift) with cooldown
-        if ((Input.GetKeyDown(KeyCode.Q) || InputBridge.GetDashDown()) && dashCooldownRemaining <= 0f)
+        // Dash ด้วย Q, Left Shift (ผ่าน InputBridge.GetSprintDown หรือ GetDashDown)
+        bool isDashPressed = Input.GetKeyDown(KeyCode.Q) ||
+                             Input.GetKeyDown(KeyCode.LeftShift) ||
+                             InputBridge.GetDashDown() ||
+                             InputBridge.GetSprintDown();
+
+        if (isDashPressed && dashCooldownRemaining <= 0f)
         {
             StartCoroutine(PerformDash());
         }
@@ -183,6 +182,12 @@ public class PlayerController : MonoBehaviour
     {
         isDashing = true;
         lastDashTime = Time.time;
+
+        // เล่นเสียง Dash ผ่าน SoundManager
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayDash();
+        }
 
         float moveX = InputBridge.GetHorizontal();
         float moveZ = InputBridge.GetVertical();
@@ -229,5 +234,4 @@ public class PlayerController : MonoBehaviour
             LockCursor();
         }
     }
-
 }
