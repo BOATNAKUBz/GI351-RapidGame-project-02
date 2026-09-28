@@ -11,11 +11,7 @@ public static class TerrainSculptorEditor
 
     static TerrainSculptorEditor()
     {
-        EditorApplication.delayCall += () =>
-        {
-            // ทำการปรับแต่ง Terrain อัตโนมัติเมื่อโหลด
-            ExecuteSculpting();
-        };
+        // Delay call removed so it doesn't overwrite customized map layout
     }
 
     [MenuItem("Tools/Terrain/Sculpt Village Plain & Mountains (NewMapWithTerrain)")]
