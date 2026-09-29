@@ -138,7 +138,7 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    protected virtual void Update()
+protected virtual void Update()
     {
         // 1. จัดการ Knockback เมื่อโดนขวานหรือลูกซอง (ใช้ Collision Sweep ป้องกันการกระเด็นทะลุกำแพง)
         if (isKnockedBack)
@@ -187,7 +187,7 @@ public class EnemyAI : MonoBehaviour
 
         bool readyToAttack = (Time.time >= nextAttackTime && stunRemaining <= 0f);
 
-        // คำนวณตำแหน่งเป้าหมาย
+        // คำนวณตำแหน่งเป้าหมาย (ลบ targetPos.y = transform.position.y ออกแล้ว เพื่อให้เป้าหมาย 3D แม่นยำ)
         Vector3 targetPos;
         if (readyToAttack)
         {
@@ -199,7 +199,6 @@ public class EnemyAI : MonoBehaviour
             Vector3 slotOffset = Quaternion.Euler(0, currentAngle, 0) * Vector3.forward * surroundRadius;
             targetPos = player.position + slotOffset;
         }
-        targetPos.y = transform.position.y;
 
         // เช็คความพร้อมของ NavMeshAgent
         bool agentUsable = (navAgent != null && navAgent.enabled && navAgent.isOnNavMesh);
@@ -221,11 +220,24 @@ public class EnemyAI : MonoBehaviour
                 navAgent.isStopped = false;
                 navAgent.speed = moveSpeed;
                 navAgent.stoppingDistance = stoppingDistance;
-                navAgent.SetDestination(targetPos);
+                
+                // อัปเดต Destination เมื่อเป้าหมายขยับเกิน 0.5 เมตร ป้องกัน SetDestination ทำงานหนักจนรวน
+                if (Vector3.Distance(navAgent.destination, targetPos) > 0.5f)
+                {
+                    navAgent.SetDestination(targetPos);
+                }
 
                 // หมุนตัวตามทิศทางที่ NavMeshAgent กำลังเดินไป
                 Vector3 moveDir = navAgent.desiredVelocity;
                 moveDir.y = 0;
+                
+                // Fallback: ถ้าระบบ NavMesh เพิ่งถูกสั่งและกำลังคำนวณทาง ให้หันหน้าตรงเข้าหาเป้าหมายก่อน
+                if (moveDir.sqrMagnitude < 0.05f)
+                {
+                    moveDir = (targetPos - transform.position);
+                    moveDir.y = 0;
+                }
+
                 if (moveDir.sqrMagnitude > 0.05f)
                 {
                     Quaternion targetRot = Quaternion.LookRotation(moveDir.normalized) * Quaternion.Euler(0, modelRotationOffset, 0);
@@ -248,11 +260,9 @@ public class EnemyAI : MonoBehaviour
         }
         // =========================================================================
         // โหมด 2: Dynamic Obstacle Avoidance + Physics Collision Sweep
-        // (ทำงานอัตโนมัติเมื่อไม่มี NavMesh หรือ Agent หลุดออกจาก NavMesh)
         // =========================================================================
         else
         {
-            // พยายามเชื่อมต่อ NavMesh เป็นระยะเผื่อเกิดบนฉากที่เพิ่ง Bake เสร็จ
             if (navAgent != null && !navAgent.enabled && Time.frameCount % 60 == 0)
             {
                 if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 2.0f, NavMesh.AllAreas))
@@ -264,7 +274,6 @@ public class EnemyAI : MonoBehaviour
 
             if (horizontalDist > stoppingDistance)
             {
-                // คำนวณแรงผลักแยกออกจากศัตรูตัวอื่น (Separation)
                 Vector3 separationForce = Vector3.zero;
                 Collider[] nearbyCols = Physics.OverlapSphere(transform.position, separationRadius);
                 for (int i = 0; i < nearbyCols.Length; i++)
@@ -289,7 +298,6 @@ public class EnemyAI : MonoBehaviour
                 Vector3 baseDir = (toTarget.normalized + separationForce * currentSepWeight).normalized;
                 if (baseDir == Vector3.zero) baseDir = toTarget.normalized;
 
-                // ตรวจหาสิ่งกีดขวาง และคำนวณทิศทางเดินอ้อม (Context Steering Obstacle Avoidance)
                 Vector3 steerDir = CalculateAvoidanceDirection(baseDir, toTarget.magnitude);
 
                 if (steerDir != Vector3.zero)
@@ -297,7 +305,6 @@ public class EnemyAI : MonoBehaviour
                     Quaternion targetRot = Quaternion.LookRotation(steerDir) * Quaternion.Euler(0, modelRotationOffset, 0);
                     transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 10f * Time.deltaTime);
 
-                    // เคลื่อนที่ด้วย Physics Collision Sweep (ไม่เดินทะลุ Collider 100%)
                     Vector3 moveStep = steerDir * moveSpeed * Time.deltaTime;
                     MoveWithCollisionSweep(moveStep);
                 }

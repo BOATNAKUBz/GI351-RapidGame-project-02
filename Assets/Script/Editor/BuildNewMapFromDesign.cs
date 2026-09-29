@@ -1216,86 +1216,64 @@ public static class BuildNewMapFromDesign
         if (swarmerPrefab == null) swarmerPrefab = zombiePrefab;
         if (tankPrefab == null) tankPrefab = zombiePrefab;
 
-        wm.zones.Clear();
+        wm.waves.Clear();
 
-        // ----------------- ZONE 1 CONFIG -----------------
-        ZoneConfig zone1 = new ZoneConfig();
-        GameObject t1 = new GameObject("Zone1_Trigger");
-        t1.transform.SetParent(z1);
-        t1.transform.position = new Vector3(255f, 13.5f, 480f);
-        BoxCollider b1 = t1.AddComponent<BoxCollider>();
-        b1.isTrigger = true;
-        b1.size = new Vector3(25f, 6f, 30f);
-        zone1.zoneTrigger = b1;
+        // ----------------- WAVE 1 CONFIG -----------------
+        WaveConfig wave1 = new WaveConfig();
 
-        // Zone 1 Spawners (Temple yard and roadside)
+        // Wave 1 Spawners (Temple yard and roadside)
         Transform[] sp1 = new Transform[]
         {
-            CreateSpawner(z1, "Sp_Z1_Temple_1", new Vector3(210f, 13.5f, 515f)),
-            CreateSpawner(z1, "Sp_Z1_Temple_2", new Vector3(225f, 13.5f, 525f)),
-            CreateSpawner(z1, "Sp_Z1_Road_Pickup", new Vector3(242f, 13.5f, 502f)),
-            CreateSpawner(z1, "Sp_Z1_Road_Bend", new Vector3(258f, 13.5f, 515f))
+            CreateSpawner(z1, "Sp_W1_Temple_1", new Vector3(210f, 13.5f, 515f)),
+            CreateSpawner(z1, "Sp_W1_Temple_2", new Vector3(225f, 13.5f, 525f)),
+            CreateSpawner(z1, "Sp_W1_Road_Pickup", new Vector3(242f, 13.5f, 502f)),
+            CreateSpawner(z1, "Sp_W1_Road_Bend", new Vector3(258f, 13.5f, 515f))
         };
-        zone1.spawnPoints = sp1;
+        wave1.spawnPoints = sp1;
 
-        zone1.spawnSequences.Add(new SpawnSequence { enemyPrefab = zombiePrefab, amount = 4, delayBeforeSpawn = 0.5f, intervalBetweenEach = 1.0f });
-        zone1.spawnSequences.Add(new SpawnSequence { enemyPrefab = gruntPrefab ?? zombiePrefab, amount = 2, delayBeforeSpawn = 3.0f, intervalBetweenEach = 1.5f });
-        wm.zones.Add(zone1);
+        wave1.spawnSequences.Add(new SpawnSequence { enemyPrefab = zombiePrefab, amount = 4, delayBeforeSpawn = 0.5f, intervalBetweenEach = 1.0f });
+        wave1.spawnSequences.Add(new SpawnSequence { enemyPrefab = gruntPrefab ?? zombiePrefab, amount = 2, delayBeforeSpawn = 3.0f, intervalBetweenEach = 1.5f });
+        wm.waves.Add(wave1);
 
-        // ----------------- ZONE 2 CONFIG (Narrow Alleyways / Jump Scare) -----------------
-        ZoneConfig zone2 = new ZoneConfig();
-        GameObject t2 = new GameObject("Zone2_Trigger");
-        t2.transform.SetParent(z2);
-        t2.transform.position = new Vector3(260f, 13.5f, 535f);
-        BoxCollider b2 = t2.AddComponent<BoxCollider>();
-        b2.isTrigger = true;
-        b2.size = new Vector3(25f, 6f, 20f);
-        zone2.zoneTrigger = b2;
+        // ----------------- WAVE 2 CONFIG (Narrow Alleyways / Jump Scare) -----------------
+        WaveConfig wave2 = new WaveConfig();
 
-        // Zone 2 Spawners (Under stilt houses, behind bamboo fences, Chicken Coop)
+        // Wave 2 Spawners (Under stilt houses, behind bamboo fences, Chicken Coop)
         Transform[] sp2 = new Transform[]
         {
-            CreateSpawner(z2, "Sp_Z2_JumpScare_House1", new Vector3(246f, 13.5f, 542f)),
-            CreateSpawner(z2, "Sp_Z2_Alley_Right", new Vector3(270f, 13.5f, 540f)),
-            CreateSpawner(z2, "Sp_Z2_ChickenCoop", new Vector3(275f, 13.5f, 546f)),
-            CreateSpawner(z2, "Sp_Z2_BuffaloCorral", new Vector3(280f, 13.5f, 562f)),
-            CreateSpawner(z2, "Sp_Z2_DeepAlley", new Vector3(268f, 13.5f, 568f))
+            CreateSpawner(z2, "Sp_W2_JumpScare_House1", new Vector3(246f, 13.5f, 542f)),
+            CreateSpawner(z2, "Sp_W2_Alley_Right", new Vector3(270f, 13.5f, 540f)),
+            CreateSpawner(z2, "Sp_W2_ChickenCoop", new Vector3(275f, 13.5f, 546f)),
+            CreateSpawner(z2, "Sp_W2_BuffaloCorral", new Vector3(280f, 13.5f, 562f)),
+            CreateSpawner(z2, "Sp_W2_DeepAlley", new Vector3(268f, 13.5f, 568f))
         };
-        zone2.spawnPoints = sp2;
+        wave2.spawnPoints = sp2;
 
-        // Fast runners jumping out!
-        zone2.spawnSequences.Add(new SpawnSequence { enemyPrefab = swarmerPrefab, amount = 5, delayBeforeSpawn = 0.2f, intervalBetweenEach = 0.4f });
-        zone2.spawnSequences.Add(new SpawnSequence { enemyPrefab = zombiePrefab, amount = 4, delayBeforeSpawn = 2.0f, intervalBetweenEach = 0.8f });
-        zone2.spawnSequences.Add(new SpawnSequence { enemyPrefab = gruntPrefab ?? zombiePrefab, amount = 3, delayBeforeSpawn = 4.0f, intervalBetweenEach = 1.0f });
-        wm.zones.Add(zone2);
+        wave2.spawnSequences.Add(new SpawnSequence { enemyPrefab = swarmerPrefab, amount = 5, delayBeforeSpawn = 0.2f, intervalBetweenEach = 0.4f });
+        wave2.spawnSequences.Add(new SpawnSequence { enemyPrefab = zombiePrefab, amount = 4, delayBeforeSpawn = 2.0f, intervalBetweenEach = 0.8f });
+        wave2.spawnSequences.Add(new SpawnSequence { enemyPrefab = gruntPrefab ?? zombiePrefab, amount = 3, delayBeforeSpawn = 4.0f, intervalBetweenEach = 1.0f });
+        wm.waves.Add(wave2);
 
-        // ----------------- ZONE 3 CONFIG (Bridge, Farmyard, Granary Barn, Boss Tank) -----------------
-        ZoneConfig zone3 = new ZoneConfig();
-        GameObject t3 = new GameObject("Zone3_Trigger");
-        t3.transform.SetParent(z3);
-        t3.transform.position = new Vector3(280f, 13.5f, 590f);
-        BoxCollider b3 = t3.AddComponent<BoxCollider>();
-        b3.isTrigger = true;
-        b3.size = new Vector3(35f, 6f, 25f);
-        zone3.zoneTrigger = b3;
+        // ----------------- WAVE 3 CONFIG (Bridge, Farmyard, Granary Barn, Boss Tank) -----------------
+        WaveConfig wave3 = new WaveConfig();
 
-        // Zone 3 Spawners (Around Bridge, Tractor, Tiang Na, Granary)
+        // Wave 3 Spawners (Around Bridge, Tractor, Tiang Na, Granary)
         Transform[] sp3 = new Transform[]
         {
-            CreateSpawner(z3, "Sp_Z3_Tractor", new Vector3(270f, 13.5f, 606f)),
-            CreateSpawner(z3, "Sp_Z3_TiangNa", new Vector3(320f, 13.5f, 610f)),
-            CreateSpawner(z3, "Sp_Z3_HayBales", new Vector3(305f, 13.5f, 602f)),
-            CreateSpawner(z3, "Sp_Z3_BarnBoss", new Vector3(298f, 13.5f, 616f)) // Boss Spawn
+            CreateSpawner(z3, "Sp_W3_Tractor", new Vector3(270f, 13.5f, 606f)),
+            CreateSpawner(z3, "Sp_W3_TiangNa", new Vector3(320f, 13.5f, 610f)),
+            CreateSpawner(z3, "Sp_W3_HayBales", new Vector3(305f, 13.5f, 602f)),
+            CreateSpawner(z3, "Sp_W3_BarnBoss", new Vector3(298f, 13.5f, 616f)) // Boss Spawn
         };
-        zone3.spawnPoints = sp3;
+        wave3.spawnPoints = sp3;
 
-        zone3.spawnSequences.Add(new SpawnSequence { enemyPrefab = zombiePrefab, amount = 6, delayBeforeSpawn = 0.5f, intervalBetweenEach = 0.6f });
-        zone3.spawnSequences.Add(new SpawnSequence { enemyPrefab = swarmerPrefab, amount = 4, delayBeforeSpawn = 2.0f, intervalBetweenEach = 0.5f });
+        wave3.spawnSequences.Add(new SpawnSequence { enemyPrefab = zombiePrefab, amount = 6, delayBeforeSpawn = 0.5f, intervalBetweenEach = 0.6f });
+        wave3.spawnSequences.Add(new SpawnSequence { enemyPrefab = swarmerPrefab, amount = 4, delayBeforeSpawn = 2.0f, intervalBetweenEach = 0.5f });
         // Boss Zombie Tank Spawn!
-        zone3.spawnSequences.Add(new SpawnSequence { enemyPrefab = tankPrefab, amount = 1, delayBeforeSpawn = 4.0f, intervalBetweenEach = 0.1f });
-        wm.zones.Add(zone3);
+        wave3.spawnSequences.Add(new SpawnSequence { enemyPrefab = tankPrefab, amount = 1, delayBeforeSpawn = 4.0f, intervalBetweenEach = 0.1f });
+        wm.waves.Add(wave3);
 
-        Debug.Log("[BuildNewMap] Configured WaveManager with 3 Zones according to diagram!");
+        Debug.Log("[BuildNewMap] Configured WaveManager with 3 Waves automatically!");
     }
 
     private static Transform CreateSpawner(Transform parent, string name, Vector3 pos)

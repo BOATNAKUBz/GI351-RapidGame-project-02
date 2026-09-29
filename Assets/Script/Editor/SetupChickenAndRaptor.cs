@@ -245,7 +245,7 @@ public static class SetupChickenAndRaptor
         Debug.Log("[SetupRaptor] Successfully created and configured Enemy_Raptor prefab!");
     }
 
-    public static void UpdateWaveManagerWithNewEnemies()
+public static void UpdateWaveManagerWithNewEnemies()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 
@@ -266,17 +266,17 @@ public static class SetupChickenAndRaptor
         WaveManager wm = Object.FindAnyObjectByType<WaveManager>();
         if (wm != null)
         {
-            // ถ้ายังไม่มี Zone ใดๆ ถูกสร้างไว้ ให้สร้าง Zone ตัวอย่างให้เป็นแนวทาง
-            if (wm.zones == null || wm.zones.Count == 0)
+            // ถ้ายังไม่มี Wave ใดๆ ถูกสร้างไว้ ให้สร้าง Wave ตัวอย่างให้เป็นแนวทาง
+            if (wm.waves == null || wm.waves.Count == 0)
             {
-                wm.zones = new List<ZoneConfig>();
+                wm.waves = new List<WaveConfig>();
 
-                // Sample Zone 1: Chicken & Raptor Sequences
-                ZoneConfig defaultZone = new ZoneConfig();
+                // Sample Wave 1: Chicken & Raptor Sequences
+                WaveConfig defaultWave = new WaveConfig();
 
                 if (chickenPrefab != null)
                 {
-                    defaultZone.spawnSequences.Add(new SpawnSequence
+                    defaultWave.spawnSequences.Add(new SpawnSequence
                     {
                         enemyPrefab = chickenPrefab,
                         amount = 4,
@@ -287,7 +287,7 @@ public static class SetupChickenAndRaptor
 
                 if (raptorPrefab != null)
                 {
-                    defaultZone.spawnSequences.Add(new SpawnSequence
+                    defaultWave.spawnSequences.Add(new SpawnSequence
                     {
                         enemyPrefab = raptorPrefab,
                         amount = 2,
@@ -296,18 +296,18 @@ public static class SetupChickenAndRaptor
                     });
                 }
 
-                wm.zones.Add(defaultZone);
+                wm.waves.Add(defaultWave);
             }
             else
             {
-                // ถ้ามี Zone อยู่แล้ว แต่บาง Sequence ยังไม่ได้ใส่ Prefab ให้ยัดใส่เป็น fallback
-                foreach (var z in wm.zones)
+                // ถ้ามี Wave อยู่แล้ว แต่บาง Sequence ยังไม่ได้ใส่ Prefab ให้ยัดใส่เป็น fallback
+                foreach (var w in wm.waves)
                 {
-                    if (z.spawnSequences == null || z.spawnSequences.Count == 0)
+                    if (w.spawnSequences == null || w.spawnSequences.Count == 0)
                     {
                         if (chickenPrefab != null)
                         {
-                            z.spawnSequences.Add(new SpawnSequence
+                            w.spawnSequences.Add(new SpawnSequence
                             {
                                 enemyPrefab = chickenPrefab,
                                 amount = 3,
@@ -321,7 +321,7 @@ public static class SetupChickenAndRaptor
 
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
-            Debug.Log("[WaveManager] Zone configurations updated with Chicken and Raptor sequences!");
+            Debug.Log("[WaveManager] Wave configurations updated with Chicken and Raptor sequences!");
         }
     }
 }

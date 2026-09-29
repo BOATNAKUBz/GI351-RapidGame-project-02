@@ -336,8 +336,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6c18a5466413d64fa3c25653e808618, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ZombieAI
-  dropItemPrefab: {fileID: 0}
-  dropChance: 0.5
+  dropItemPrefab: {fileID: 8421487562004006942, guid: b413c9041d42bd04f8923f4ee92ab1f7, type: 3}
+  dropChance: 0.3
   stats:
     type: 4
     displayName: Zombie Walker
@@ -351,8 +351,9 @@ MonoBehaviour:
     emissionColor: {r: 1.8, g: 0.4, b: 0.2, a: 2}
     dropChance: 0.5
   player: {fileID: 0}
-  moveSpeed: 13
+  moveSpeed: 10
   stoppingDistance: 1.4
+  modelRotationOffset: 0
   attackRange: 5
   attackDamage: 10
   attackCooldown: 1.1
@@ -363,9 +364,17 @@ MonoBehaviour:
   separationRadius: 1.3
   separationWeight: 1.4
   orbitSpeed: 8
+  obstacleLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  obstacleCheckDistance: 3.5
+  skinWidth: 0.05
   wobbleSpeed: 6
   wobbleAngle: 6
   groanInterval: 7
+  extraLoots:
+  - itemPrefab: {fileID: 2122155298024884394, guid: 606416a03f1615a42a8244beec668fb5, type: 3}
+    dropChance: 0.3
 --- !u!1 &2550759213663857381
 GameObject:
   m_ObjectHideFlags: 0
