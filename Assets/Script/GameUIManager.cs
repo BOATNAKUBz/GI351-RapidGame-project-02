@@ -520,7 +520,7 @@ public class GameUIManager : MonoBehaviour
 
         waveText = wavePanel.AddComponent<Text>();
         waveText.font = defaultFont;
-        waveText.text = "ZONE 1 / 5";
+        waveText.text = "WAVE 1 / 5";
         waveText.fontSize = 34;
         waveText.fontStyle = FontStyle.Bold;
         waveText.color = new Color(1f, 0.95f, 0.9f);
@@ -969,7 +969,7 @@ public class GameUIManager : MonoBehaviour
     public void UpdateWaveUI(int currentWave, int maxWave, int enemiesLeft)
     {
         // เปลี่ยนคำว่า WAVE ในเครื่องหมาย "" ตรงนี้ครับ
-        if (waveText != null) waveText.text = $"ZONE {currentWave} / {maxWave}";
+        if (waveText != null) waveText.text = $"WAVE {currentWave} / {maxWave}";
         if (enemyCountText != null) enemyCountText.text = $"Enemies Left: {enemiesLeft}";
     }
 

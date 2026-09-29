@@ -1,0 +1,276 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8106431583827238232
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3750240842221978808}
+  - component: {fileID: 2889085267693511352}
+  - component: {fileID: 1877163357693262237}
+  - component: {fileID: 4099086899553451543}
+  - component: {fileID: 5015042801425393828}
+  - component: {fileID: 5157923492980427125}
+  m_Layer: 0
+  m_Name: Managers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3750240842221978808
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8106431583827238232}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2889085267693511352
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8106431583827238232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a43e3f6f7936d3f42b9e626c1880ea00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  arenaSize: 50
+  wallHeight: 4.5
+--- !u!114 &1877163357693262237
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8106431583827238232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50ef8f5a9427bf24986765058f8a12a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  customShootClip: {fileID: 0}
+  customHitMarkerClip: {fileID: 0}
+  customEnemyHurtClip: {fileID: 0}
+  customEnemyDeathClip: {fileID: 0}
+  customPlayerHurtClip: {fileID: 0}
+  customPickupMedkitClip: {fileID: 0}
+  customPickupAmmoClip: {fileID: 0}
+  customWaveStartClip: {fileID: 0}
+  customVictoryClip: {fileID: 0}
+  customGameOverClip: {fileID: 0}
+  customEmptyClickClip: {fileID: 0}
+  customShotgunShootClip: {fileID: 0}
+  customRevolverShootClip: {fileID: 0}
+  customShotgunPumpClip: {fileID: 0}
+  customAxeSwingClip: {fileID: 8300000, guid: caf14903051b3e44c9f0340c1e193444, type: 3}
+  customAxeHitClip: {fileID: 8300000, guid: e621eb06ffa9c4b48b762ba2a3b1c4b9, type: 3}
+  customWeaponPickupClip: {fileID: 0}
+  customDashClip: {fileID: 0}
+--- !u!114 &4099086899553451543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8106431583827238232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c57233bc334605c46839cd3f7e77cf45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LootDrop
+  medkitPrefab: {fileID: 8421487562004006942, guid: b413c9041d42bd04f8923f4ee92ab1f7, type: 3}
+  ammoPrefab: {fileID: 2122155298024884394, guid: 606416a03f1615a42a8244beec668fb5, type: 3}
+  powerGemPrefab: {fileID: 6713561677308950538, guid: b4b38b745b26db6488d23d3a169ef12b, type: 3}
+--- !u!114 &5015042801425393828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8106431583827238232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f390d723fe9086a4f91533127c55a618, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameUIManager
+  hudCanvas: {fileID: 0}
+  hpSlider: {fileID: 0}
+  hpText: {fileID: 0}
+  ammoText: {fileID: 0}
+  waveText: {fileID: 0}
+  enemyCountText: {fileID: 0}
+  notifText: {fileID: 0}
+  hitMarker: {fileID: 0}
+  damageVignette: {fileID: 0}
+  interactPromptText: {fileID: 0}
+  weaponSlotsText: {fileID: 0}
+  gameOverPanel: {fileID: 0}
+  victoryPanel: {fileID: 0}
+  dashCooldownFill: {fileID: 0}
+  dashCooldownText: {fileID: 0}
+  hpHeartRect: {fileID: 0}
+  hpHeartImage: {fileID: 0}
+--- !u!114 &5157923492980427125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8106431583827238232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ea6079044bd02649bf2e1d9bd8a39c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WaveManager
+  waves:
+  - spawnPoints:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    spawnSequences:
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 10
+      delayBeforeSpawn: 0
+      intervalBetweenEach: 0.5
+    - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
+      amount: 1
+      delayBeforeSpawn: 5
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      amount: 2
+      delayBeforeSpawn: 8
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 8073443194988779917, guid: 6b0b0b098177a3b439c80991ec9deacc, type: 3}
+      amount: 2
+      delayBeforeSpawn: 13
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 8
+      delayBeforeSpawn: 15
+      intervalBetweenEach: 0
+  - spawnPoints:
+    - {fileID: 0}
+    spawnSequences:
+    - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
+      amount: 2
+      delayBeforeSpawn: 0
+      intervalBetweenEach: 0.3
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 15
+      delayBeforeSpawn: 5
+      intervalBetweenEach: 0.6
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      amount: 4
+      delayBeforeSpawn: 10
+      intervalBetweenEach: 1
+    - enemyPrefab: {fileID: 8073443194988779917, guid: 6b0b0b098177a3b439c80991ec9deacc, type: 3}
+      amount: 2
+      delayBeforeSpawn: 13
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 15
+      delayBeforeSpawn: 15
+      intervalBetweenEach: 0.4
+  - spawnPoints:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    spawnSequences:
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 25
+      delayBeforeSpawn: 0
+      intervalBetweenEach: 0.3
+    - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
+      amount: 3
+      delayBeforeSpawn: 10
+      intervalBetweenEach: 0.6
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      amount: 5
+      delayBeforeSpawn: 15
+      intervalBetweenEach: 1
+    - enemyPrefab: {fileID: 8073443194988779917, guid: 6b0b0b098177a3b439c80991ec9deacc, type: 3}
+      amount: 2
+      delayBeforeSpawn: 18
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 20
+      delayBeforeSpawn: 24
+      intervalBetweenEach: 0.4
+  - spawnPoints:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    spawnSequences:
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      amount: 4
+      delayBeforeSpawn: 0
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 30
+      delayBeforeSpawn: 5
+      intervalBetweenEach: 0.3
+    - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
+      amount: 3
+      delayBeforeSpawn: 15
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 8073443194988779917, guid: 6b0b0b098177a3b439c80991ec9deacc, type: 3}
+      amount: 3
+      delayBeforeSpawn: 20
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      amount: 4
+      delayBeforeSpawn: 23
+      intervalBetweenEach: 0
+  - spawnPoints:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    spawnSequences:
+    - enemyPrefab: {fileID: 6519911596422382464, guid: 35406e86fe2e8f742a9e9a712b5331e0, type: 3}
+      amount: 4
+      delayBeforeSpawn: 0
+      intervalBetweenEach: 3
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 40
+      delayBeforeSpawn: 5
+      intervalBetweenEach: 0.6
+    - enemyPrefab: {fileID: 4011425618187314415, guid: 810e6afcf1da13c47b4375293b21de30, type: 3}
+      amount: 8
+      delayBeforeSpawn: 12
+      intervalBetweenEach: 1
+    - enemyPrefab: {fileID: 8073443194988779917, guid: 6b0b0b098177a3b439c80991ec9deacc, type: 3}
+      amount: 3
+      delayBeforeSpawn: 20
+      intervalBetweenEach: 0
+    - enemyPrefab: {fileID: 1723133102700889643, guid: 833e3b20ed52880468b414a87957bdca, type: 3}
+      amount: 30
+      delayBeforeSpawn: 25
+      intervalBetweenEach: 0.4
+  globalSpawnPoints: []
+  timeBetweenWaves: 10

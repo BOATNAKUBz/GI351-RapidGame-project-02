@@ -2406,7 +2406,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RaptorAI
   dropItemPrefab: {fileID: 8421487562004006942, guid: b413c9041d42bd04f8923f4ee92ab1f7, type: 3}
-  dropChance: 0.4
+  dropChance: 1
   stats:
     type: 0
     displayName: 
@@ -2420,12 +2420,12 @@ MonoBehaviour:
     emissionColor: {r: 0, g: 0, b: 0, a: 0}
     dropChance: 0
   player: {fileID: 0}
-  moveSpeed: 6
+  moveSpeed: 13
   stoppingDistance: 1.6
   modelRotationOffset: 180
   attackRange: 5
-  attackDamage: 5
-  attackCooldown: 2
+  attackDamage: 10
+  attackCooldown: 1
   snapToGround: 1
   groundCheckDistance: 10
   raycastStartHeight: 1.5
@@ -2435,11 +2435,11 @@ MonoBehaviour:
   orbitSpeed: 10
   obstacleLayers:
     serializedVersion: 2
-    m_Bits: 55
+    m_Bits: 4294967295
   obstacleCheckDistance: 3.5
   skinWidth: 0.05
-  dashRange: 20
-  dashSpeed: 50
+  dashRange: 10
+  dashSpeed: 30
   dashCooldown: 7
 --- !u!1 &4099820048420346186
 GameObject:

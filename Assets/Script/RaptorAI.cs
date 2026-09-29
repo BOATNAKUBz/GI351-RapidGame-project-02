@@ -29,14 +29,17 @@ public class RaptorAI : EnemyAI
     {
         if (isDashing) return;
 
-        // อัปเดต Speed ให้กับ Animator ของ Raptor
+        // อัปเดต Speed ให้กับ Animator ของ Raptor (โดยเช็คก่อนว่ามีพารามิเตอร์นี้ไหม)
         if (animator != null && player != null)
         {
             Vector3 flatEnemy = new Vector3(transform.position.x, 0, transform.position.z);
             Vector3 flatPlayer = new Vector3(player.position.x, 0, player.position.z);
             float distance = Vector3.Distance(flatEnemy, flatPlayer);
 
-            try { animator.SetFloat("Speed", distance > stoppingDistance ? moveSpeed : 0f); } catch { }
+            if (HasAnimatorParameter(animator, "Speed"))
+            {
+                animator.SetFloat("Speed", distance > stoppingDistance ? moveSpeed : 0f);
+            }
 
             // ถ้าอยู่ในระยะพุ่ง และ คูลดาวน์พร้อมใช้งาน และไม่ติดสตัน ให้พุ่งชนทันที
             if (distance <= dashRange && Time.time >= nextDashTime && stunRemaining <= 0f && !isKnockedBack)
@@ -68,10 +71,10 @@ public class RaptorAI : EnemyAI
             transform.rotation = Quaternion.LookRotation(targetDirection) * Quaternion.Euler(0, modelRotationOffset, 0);
         }
 
-        // ดึง Animator ของตัวเองมาใช้งาน
-        if (animator != null)
+        // ดึง Animator ของตัวเองมาใช้งาน (โดยเช็คก่อนว่ามีพารามิเตอร์นี้ไหม)
+        if (animator != null && HasAnimatorParameter(animator, "Attack"))
         {
-            try { animator.SetTrigger("Attack"); } catch { }
+            animator.SetTrigger("Attack");
         }
 
         // 2. พุ่งตรงไปข้างหน้าตามทิศทางเป้าหมายหาผู้เล่น (ใช้ MoveWithCollisionSweep ไม่พุ่งทะลุกำแพง)

@@ -199,7 +199,6 @@ public class EnemyAI : MonoBehaviour
             Vector3 slotOffset = Quaternion.Euler(0, currentAngle, 0) * Vector3.forward * surroundRadius;
             targetPos = player.position + slotOffset;
         }
-        targetPos.y = transform.position.y;
 
         // เช็คความพร้อมของ NavMeshAgent
         bool agentUsable = (navAgent != null && navAgent.enabled && navAgent.isOnNavMesh);
@@ -212,7 +211,7 @@ public class EnemyAI : MonoBehaviour
         }
 
         // =========================================================================
-        // โหมด 1: เดินโดยใช้ NavMeshAgent (หากฉากมี NavMesh และ Agent อยู่บน NavMesh)
+        // โหมด 1: เดินโดยใช้ NavMeshAgent
         // =========================================================================
         if (agentUsable)
         {
@@ -221,11 +220,21 @@ public class EnemyAI : MonoBehaviour
                 navAgent.isStopped = false;
                 navAgent.speed = moveSpeed;
                 navAgent.stoppingDistance = stoppingDistance;
-                navAgent.SetDestination(targetPos);
+                
+                if (Vector3.Distance(navAgent.destination, targetPos) > 0.5f)
+                {
+                    navAgent.SetDestination(targetPos);
+                }
 
-                // หมุนตัวตามทิศทางที่ NavMeshAgent กำลังเดินไป
                 Vector3 moveDir = navAgent.desiredVelocity;
                 moveDir.y = 0;
+                
+                if (moveDir.sqrMagnitude < 0.05f)
+                {
+                    moveDir = (targetPos - transform.position);
+                    moveDir.y = 0;
+                }
+
                 if (moveDir.sqrMagnitude > 0.05f)
                 {
                     Quaternion targetRot = Quaternion.LookRotation(moveDir.normalized) * Quaternion.Euler(0, modelRotationOffset, 0);
@@ -236,7 +245,6 @@ public class EnemyAI : MonoBehaviour
             {
                 navAgent.isStopped = true;
 
-                // หันหน้าประจันกับผู้เล่นโดยตรงเมื่อเข้ามาอยู่ในระยะ
                 Vector3 lookTarget = new Vector3(player.position.x, transform.position.y, player.position.z);
                 Vector3 lookDir = (lookTarget - transform.position).normalized;
                 if (lookDir != Vector3.zero)
@@ -248,11 +256,9 @@ public class EnemyAI : MonoBehaviour
         }
         // =========================================================================
         // โหมด 2: Dynamic Obstacle Avoidance + Physics Collision Sweep
-        // (ทำงานอัตโนมัติเมื่อไม่มี NavMesh หรือ Agent หลุดออกจาก NavMesh)
         // =========================================================================
         else
         {
-            // พยายามเชื่อมต่อ NavMesh เป็นระยะเผื่อเกิดบนฉากที่เพิ่ง Bake เสร็จ
             if (navAgent != null && !navAgent.enabled && Time.frameCount % 60 == 0)
             {
                 if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 2.0f, NavMesh.AllAreas))
@@ -264,7 +270,6 @@ public class EnemyAI : MonoBehaviour
 
             if (horizontalDist > stoppingDistance)
             {
-                // คำนวณแรงผลักแยกออกจากศัตรูตัวอื่น (Separation)
                 Vector3 separationForce = Vector3.zero;
                 Collider[] nearbyCols = Physics.OverlapSphere(transform.position, separationRadius);
                 for (int i = 0; i < nearbyCols.Length; i++)
@@ -289,7 +294,6 @@ public class EnemyAI : MonoBehaviour
                 Vector3 baseDir = (toTarget.normalized + separationForce * currentSepWeight).normalized;
                 if (baseDir == Vector3.zero) baseDir = toTarget.normalized;
 
-                // ตรวจหาสิ่งกีดขวาง และคำนวณทิศทางเดินอ้อม (Context Steering Obstacle Avoidance)
                 Vector3 steerDir = CalculateAvoidanceDirection(baseDir, toTarget.magnitude);
 
                 if (steerDir != Vector3.zero)
@@ -297,7 +301,6 @@ public class EnemyAI : MonoBehaviour
                     Quaternion targetRot = Quaternion.LookRotation(steerDir) * Quaternion.Euler(0, modelRotationOffset, 0);
                     transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 10f * Time.deltaTime);
 
-                    // เคลื่อนที่ด้วย Physics Collision Sweep (ไม่เดินทะลุ Collider 100%)
                     Vector3 moveStep = steerDir * moveSpeed * Time.deltaTime;
                     MoveWithCollisionSweep(moveStep);
                 }
@@ -326,11 +329,6 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// ระบบคำนวณทิศทางเดินอ้อมสิ่งกีดขวาง (Obstacle Avoidance / Whisker Steering):
-    /// หากเส้นทางตรงข้างหน้าถูกบล็อกด้วย Collider ของสิ่งกีดขวาง (บ้าน, กำแพง, ต้นไม้, หิน)
-    /// จะสแกนมุมองศารอบข้างเพื่อหาเส้นทางเปิดที่เดินอ้อมไปหา Player ได้อย่างเป็นธรรมชาติ
-    /// </summary>
     protected virtual Vector3 CalculateAvoidanceDirection(Vector3 directDir, float distToTarget)
     {
         if (directDir == Vector3.zero) return Vector3.zero;
@@ -339,12 +337,10 @@ public class EnemyAI : MonoBehaviour
         float checkDist = Mathf.Min(obstacleCheckDistance, Mathf.Max(1.5f, distToTarget));
         float probeRadius = (capsuleCol != null) ? Mathf.Max(0.2f, capsuleCol.radius * 0.8f) : 0.35f;
 
-        // 1. ตรวจสอบว่าเส้นทางตรงมีสิ่งกีดขวางขวางอยู่หรือไม่
         bool directBlocked = ProbeForObstacle(rayStart, directDir, checkDist, probeRadius, out RaycastHit directHit);
 
         if (!directBlocked)
         {
-            // ทางข้างหน้าโล่ง ไม่มีสิ่งกีดขวาง -> เดินตรงเข้าหาเป้าหมายได้เลย
             if (avoidanceMemoryTimer > 0f)
             {
                 avoidanceMemoryTimer -= Time.deltaTime;
@@ -353,8 +349,6 @@ public class EnemyAI : MonoBehaviour
             return directDir;
         }
 
-        // 2. หากทางตรงมีสิ่งกีดขวางขวางอยู่ -> สแกนหามุมองศาเพื่อเดินอ้อม (Whisker Probing)
-        // องศาที่ทดสอบ: 30, 60, 90, 120, 150 องศา
         float[] baseAngles = new float[] { 30f, 60f, 90f, 120f, 150f };
         float preferredSign = (avoidanceSideMemory != 0f) ? avoidanceSideMemory : 1f;
 
@@ -376,7 +370,6 @@ public class EnemyAI : MonoBehaviour
                 bool blocked = ProbeForObstacle(rayStart, candidateDir, checkDist * 0.85f, probeRadius, out RaycastHit hit);
                 if (!blocked)
                 {
-                    // ทางนี้โล่ง! คำนวณคะแนน (มุมที่เบี่ยงน้อยกว่าจะได้คะแนนดีกว่า + โบนัสความจำข้างเดิมเพื่อไม่ให้เดินสลับไปมา)
                     float consistencyBonus = (signs[s] == avoidanceSideMemory) ? 0.35f : 0f;
                     float anglePenalty = Mathf.Abs(signedAngle) / 180f;
                     float score = (1f - anglePenalty) + consistencyBonus;
@@ -391,14 +384,12 @@ public class EnemyAI : MonoBehaviour
                 }
             }
 
-            // หากเจอมุมที่ผ่านได้ในระยะใกล้ที่สุด ให้เลือกทันทีเพื่อไม่ให้เลี้ยวอ้อมไกลเกินความจำเป็น
             if (bestClearDir != Vector3.zero)
             {
                 break;
             }
         }
 
-        // 3. ถ้าทุกมุมติดหมด (เช่น อยู่ในซอกตัน) ให้ Slide ไปตามผิวหน้าของกำแพง
         if (bestClearDir == Vector3.zero && directHit.collider != null)
         {
             Vector3 slide = Vector3.ProjectOnPlane(directDir, directHit.normal);
@@ -412,9 +403,6 @@ public class EnemyAI : MonoBehaviour
         return (bestClearDir != Vector3.zero) ? bestClearDir : directDir;
     }
 
-    /// <summary>
-    /// สแกนด้วย SphereCast เพื่อตรวจหาสิ่งกีดขวาง (ไม่นับตัวเอง, Trigger, Enemy หรือ Player)
-    /// </summary>
     protected bool ProbeForObstacle(Vector3 origin, Vector3 dir, float distance, float radius, out RaycastHit validHit)
     {
         validHit = default;
@@ -431,6 +419,9 @@ public class EnemyAI : MonoBehaviour
             if (c.transform.root == transform.root) continue;
             if (c.CompareTag("Enemy") || c.CompareTag("Player")) continue;
 
+            // มองข้ามการชนพื้นหรือเนิน
+            if (h.normal.y > 0.65f) continue;
+
             if (h.distance < closestDist)
             {
                 closestDist = h.distance;
@@ -442,11 +433,6 @@ public class EnemyAI : MonoBehaviour
         return found;
     }
 
-    /// <summary>
-    /// เคลื่อนที่ Transform โดยใช้การยิง CapsuleCast ล่วงหน้า (Collision Sweep)
-    /// เมื่อพบ Collider ของกำแพง/วัตถุ จะหยุดก่อนถึงผิวสัมผัส และ Slide ไปตามแนวกำแพง
-    /// รับประกัน 100% ว่าศัตรูจะไม่สามารถเดินทะลุ Collider ได้
-    /// </summary>
     public virtual void MoveWithCollisionSweep(Vector3 deltaMove)
     {
         if (deltaMove.sqrMagnitude < 0.000001f) return;
@@ -458,20 +444,23 @@ public class EnemyAI : MonoBehaviour
 
         Vector3 p1, p2;
         float radius;
+        
+        // เพิ่มระยะก้าวข้าม (Step Height)
+        float stepHeight = 0.5f; 
 
         if (capsuleCol != null)
         {
             Vector3 center = transform.position + capsuleCol.center;
             float halfHeight = Mathf.Max(0.05f, (capsuleCol.height * 0.5f) - capsuleCol.radius);
             p1 = center + Vector3.up * halfHeight;
-            p2 = center - Vector3.up * halfHeight;
+            p2 = center - Vector3.up * Mathf.Max(0f, halfHeight - stepHeight); 
             radius = Mathf.Max(0.15f, capsuleCol.radius * 0.92f);
         }
         else
         {
             Vector3 center = transform.position + Vector3.up * 1f;
             p1 = center + Vector3.up * 0.45f;
-            p2 = center - Vector3.up * 0.45f;
+            p2 = center - Vector3.up * Mathf.Max(0f, 0.45f - stepHeight);
             radius = 0.4f;
         }
 
@@ -490,6 +479,9 @@ public class EnemyAI : MonoBehaviour
             if (c.transform.root == transform.root) continue;
             if (c.CompareTag("Enemy") || c.CompareTag("Player")) continue;
 
+            // มองข้ามการชนพื้นหรือเนิน
+            if (h.normal.y > 0.65f) continue;
+
             if (h.distance < closestDist)
             {
                 closestDist = h.distance;
@@ -500,16 +492,13 @@ public class EnemyAI : MonoBehaviour
 
         if (!hasHit)
         {
-            // ทางโล่ง เคลื่อนที่ได้เต็มระยะ
             transform.position += deltaMove;
         }
         else
         {
-            // เคลื่อนที่ไปจนถึงจุดสัมผัส (เว้นระยะ skinWidth)
             float allowedDist = Mathf.Max(0f, closestDist - skinWidth);
             transform.position += moveDir * allowedDist;
 
-            // คำนวณระยะที่เหลือแล้ว Slide ไปตามแนวราบของพื้นผิว Collider
             float remainingDist = moveDist - allowedDist;
             if (remainingDist > 0.001f && closestHit.normal.sqrMagnitude > 0.01f)
             {
@@ -536,6 +525,8 @@ public class EnemyAI : MonoBehaviour
                         if (sc.transform.root == transform.root) continue;
                         if (sc.CompareTag("Enemy") || sc.CompareTag("Player")) continue;
 
+                        if (sh.normal.y > 0.65f) continue;
+
                         if (sh.distance < closestSlideDist)
                         {
                             closestSlideDist = sh.distance;
@@ -556,9 +547,6 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// ฟังก์ชันยึดศัตรูให้ติดพื้นเสมอ โดยยิง Raycast ลงข้างล่าง
-    /// </summary>
     public virtual void SnapToGround()
     {
         if (!snapToGround) return;
