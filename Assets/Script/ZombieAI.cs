@@ -8,6 +8,13 @@ public class ZombieAI : EnemyAI
     public float wobbleAngle = 6f;
     public float groanInterval = 7f;
 
+    [System.Serializable]
+    public class ZombieLoot
+    {
+    public GameObject itemPrefab;
+    [Range(0f, 1f)] public float dropChance = 0.5f;
+    }
+
     [Header("Attack Post-Pause Settings")]
     [Tooltip("ระยะเวลาหยุดเดินหลังโจมตีเสร็จ (วินาที)")]
     public float postAttackPauseDuration = 1.2f;
@@ -21,6 +28,8 @@ public class ZombieAI : EnemyAI
     [Header("Audio Settings")]
     [Tooltip("ลำโพง AudioSource (หากไม่ใส่ ระบบจะหาอัตโนมัติจากตัวมันเอง)")]
     public AudioSource audioSource;
+
+    public ZombieLoot[] extraLoots;
 
     [Tooltip("คลิปเสียงคำรามเล่นวนตามช่วงเวลา")]
     public AudioClip[] groanClips;
@@ -203,5 +212,27 @@ public class ZombieAI : EnemyAI
         }
 
         isPostAttackPausing = false;
+    }
+
+    public override void DropLoot()
+    {
+        // 1. ดรอปไอเทมชิ้นหลัก (ถ้าคุณมีการใส่ไว้ในช่อง Drop Item Prefab เดิมของ EnemyAI)
+        base.DropLoot();
+
+        // 2. ดรอปไอเทมเสริมหลายๆ ชิ้นจาก Array
+        if (extraLoots != null && extraLoots.Length > 0)
+        {
+            foreach (var loot in extraLoots)
+            {
+                if (loot.itemPrefab != null && Random.value <= loot.dropChance)
+                {
+                    // สุ่มตำแหน่งกระจายออกด้านข้างเล็กน้อย (รัศมี 0.6 เมตร) เพื่อไม่ให้โมเดลไอเทมซ้อนทับกัน
+                    Vector2 offset = Random.insideUnitCircle * 0.6f;
+                    Vector3 dropPos = transform.position + new Vector3(offset.x, 0.5f, offset.y);
+                    
+                    Instantiate(loot.itemPrefab, dropPos, Quaternion.identity);
+                }
+            }
+        }
     }
 }

@@ -376,6 +376,9 @@ MonoBehaviour:
   droopAngle: 25
   lookAtPlayerSpeed: 6
   audioSource: {fileID: 0}
+  extraLoots:
+  - itemPrefab: {fileID: 2122155298024884394, guid: 606416a03f1615a42a8244beec668fb5, type: 3}
+    dropChance: 0.3
   groanClips: []
   attackClip: {fileID: 0}
 --- !u!1 &2550759213663857381
